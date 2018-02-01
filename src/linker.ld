@@ -1,0 +1,109 @@
+ENTRY(_vectors)
+
+MEMORY
+{
+    /* Kernel boots at 0x8000 on 32 bit, 0x80000 on 64 bit.  Unless changed in config to 0x0 by setting kernel_old=1. */
+    RAM     (rwx)   : ORIGIN = 0x8000, LENGTH = 256M
+    ROM     (rx)    : ORIGIN = 0x20000000, LENGTH = 512M
+}
+
+SECTIONS {
+    __text_start = .;
+    /*
+    .init : {
+        *(.init)
+    } > RAM
+    */
+
+    .text : {
+        *(.text)
+    } > RAM
+    . = ALIGN(8);
+    __text_end = .;
+
+    __data_start = .;
+    .data : {
+        *(.rodata)
+        *(.data)
+    } > RAM
+    . = ALIGN(8);
+    __data_end = .;
+
+    __bss_start = .;
+    .bss : {
+        *(.bss)
+        *(COMMON)
+    } > RAM
+    . = ALIGN(8);
+    __bss_end = .;
+
+    __heap_start = .;
+    . = . + 0x1000;
+    . = ALIGN(8);
+    __heap_end = .;
+
+    .stack_core_0 : {
+        . = ALIGN(8);
+        __user_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __user_stack_end_core_0 = .;
+
+        __fiq_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __fiq_stack_end_core_0 = .;
+        
+        __irq_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __irq_stack_end_core_0 = .;
+
+        __svr_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __svr_stack_end_core_0 = .;
+
+        __abt_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __abt_stack_end_core_0 = .;
+
+        __udef_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __udef_stack_end_core_0 = .;
+        
+        __sys_stack_start_core_0 = .;
+        . = . + 0x1000;    
+        __sys_stack_end_core_0 = .;
+    }
+
+    .stack_core_1 : {
+        . = ALIGN(8);
+        __svr_stack_start_core_1 = .;
+        . = . + 0x1000;    
+        __svr_stack_end_core_1 = .;
+
+        __irq_stack_start_core_1 = .;
+        . = . + 0x1000;    
+        __irq_stack_end_core_1 = .;
+    }
+
+    .stack_core_2 : {
+        . = ALIGN(8);
+        __svr_stack_start_core_2 = .;
+        . = . + 0x1000;    
+        __svr_stack_end_core_2 = .;
+
+        __irq_stack_start_core_2 = .;
+        . = . + 0x1000;    
+        __irq_stack_end_core_2 = .;
+    }
+
+    .stack_core_3 : {
+        . = ALIGN(8);
+        __svr_stack_start_core_3 = .;
+        . = . + 0x1000;    
+        __svr_stack_end_core_3 = .;
+
+        __irq_stack_start_core_3 = .;
+        . = . + 0x1000;    
+        __irq_stack_end_core_3 = .;
+    }
+    
+}
