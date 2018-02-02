@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stdint.h>
 
 extern uint32_t get_core_id( void );
@@ -11,3 +15,7 @@ typedef volatile struct {
 
 extern int __spin_lock(spinlock_t *lock);
 extern void __spin_unlock(spinlock_t *lock);
+
+#ifdef __cplusplus
+    }
+#endif

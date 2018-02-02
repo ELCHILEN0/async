@@ -1,3 +1,9 @@
+#include "../cpp/msync.hpp"
+
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -13,11 +19,6 @@
 
 #include "mailbox.h"
 #include "multicore.h"
-
-// extern "C"
-// {
-// #include "../cpp/msync.cpp"
-// }
 
 uint32_t act_message[] = {32, 0, 0x00038041, 8, 0, 130, 0, 0};
 
@@ -120,3 +121,7 @@ void kernel_main ( uint32_t r0, uint32_t r1, uint32_t atags ) {
     act_message[6] = 0;
     mailbox_write(mailbox0, MB0_PROPERTY_TAGS_ARM_TO_VC, (uint32_t) &act_message);
 }
+
+#ifdef __cplusplus
+    }
+#endif

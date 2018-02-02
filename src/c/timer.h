@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stdint.h>
 
 typedef struct {
@@ -53,4 +57,8 @@ extern void local_timer_interrupt_routing( unsigned int mode );
 extern void local_timer_start( unsigned int reload );
 extern void local_timer_reset( void );
 
-local_timer_t *local_timer;
+extern local_timer_t *local_timer;
+
+#ifdef __cplusplus
+    }
+#endif

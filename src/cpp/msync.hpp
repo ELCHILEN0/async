@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <cstdint>
-#include <vector>
+// #include <vector>
 
 #define LOCK_ID_MASK 0xFFFFFFF0
 #define ACQUIRE_FLAG (1 << 0)
@@ -41,7 +41,7 @@ class ProducerLock: public Lock {
 
 class Producer {
     private:
-        std::vector<ProducerLock> locks;
+        // std::vector<ProducerLock> locks;
     
     public:
         void dispatch();

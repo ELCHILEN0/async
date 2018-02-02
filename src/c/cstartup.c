@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -43,3 +47,6 @@ void cstartup( uint32_t r0, uint32_t r1, uint32_t atags ) {
     while (1) { }
 }
 
+#ifdef __cplusplus
+    }
+#endif

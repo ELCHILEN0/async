@@ -1,9 +1,10 @@
 # The ARM toolchain prefix (32 bit = arm-...-eabi, 64 bit = aarch64-...-gnueabi)
-TOOLCHAIN = arm-none-eabi
+# TOOLCHAIN = arm-none-eabi
+TOOLCHAIN = /usr/local/gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi
 # TOOLCHAIN = /root/x-tools/aarch64-rpi3-linux-gnueabi/bin/aarch64-rpi3-linux-gnueabi
 
 AARCH = 
-CCFLAGS = -nostartfiles -ffreestanding -mfpu=vfp -mcpu=cortex-a53 -ggdb
+CCFLAGS = -nostartfiles -ffreestanding -mfpu=vfp -mcpu=cortex-a53 -ggdb -fno-exceptions -fno-use-cxa-atexit -fno-unwind-tables 
 
 # AARCH = -march=armv6 
 # CCFLAGS = -O2 -Wall -nostartfiles -ffreestanding $(AARCH)
@@ -16,7 +17,7 @@ COPY = /Volumes/boot
 
 SOBJ = bootcode.o vectors.o
 UOBJ = cstartup.o cstubs.o kernel.o peripheral.o gpio.o mailbox.o interrupts.o timer.o uart.o multicore.o
-COBJ = msync.o
+COBJ = msync.o cppstubs.o
 
 # SOBJ = startup.o
 # UOBJ = cstartup.o cstubs.o peripheral.o interrupts.o kernel.o gpio.o uart.o timer.o
@@ -24,8 +25,8 @@ COBJ = msync.o
 all: $(BUILD)/$(TARGET).img $(BUILD)/$(TARGET).list
 
 # ELF
-$(BUILD)/$(TARGET).elf: $(SOBJ) $(UOBJ) $(COBJ)
-	$(TOOLCHAIN)-gcc $(CCFLAGS) -T $(SOURCE)/linker.ld $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) -o $(BUILD)/$(TARGET).elf
+$(BUILD)/$(TARGET).elf: $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) $(addprefix $(BUILD)/, $(UOBJ))
+	$(TOOLCHAIN)-g++ $(CCFLAGS) -T $(SOURCE)/linker.ld $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) -o $(BUILD)/$(TARGET).elf
 
 # ELF to LIST
 $(BUILD)/$(TARGET).list: $(BUILD)/$(TARGET).elf
@@ -35,14 +36,14 @@ $(BUILD)/$(TARGET).list: $(BUILD)/$(TARGET).elf
 $(BUILD)/$(TARGET).img: $(BUILD)/$(TARGET).elf
 	$(TOOLCHAIN)-objcopy -O binary $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).img
 
-$(SOBJ): %.o: $(SOURCE)/asm/%.s
-	$(TOOLCHAIN)-as $(SOURCE)/asm/$(basename $@).s -o $(BUILD)/$@
+$(addprefix $(BUILD)/, $(SOBJ)): $(BUILD)/%.o: $(SOURCE)/asm/%.s
+	$(TOOLCHAIN)-as $(SOURCE)/asm/$(basename $(notdir $@)).s -o $@
 
-$(UOBJ): %.o: $(SOURCE)/c/%.c
-	$(TOOLCHAIN)-gcc $(CCFLAGS) -c $(SOURCE)/c/$(basename $@).c -o $(BUILD)/$@
+$(addprefix $(BUILD)/, $(UOBJ)): $(BUILD)/%.o: $(SOURCE)/c/%.c
+	$(TOOLCHAIN)-g++ $(CCFLAGS) -c $(SOURCE)/c/$(basename $(notdir $@)).c -o $@
 
-$(COBJ): %.o: $(SOURCE)/cpp/%.cpp
-	$(TOOLCHAIN)-gcc $(CCFLAGS) -c $(SOURCE)/cpp/$(basename $@).cpp -o $(BUILD)/$@
+$(addprefix $(BUILD)/, $(COBJ)): $(BUILD)/%.o: $(SOURCE)/cpp/%.cpp
+	$(TOOLCHAIN)-g++ $(CCFLAGS) -c $(SOURCE)/cpp/$(basename $(notdir $@)).cpp -o $@
 
 copy: all
 	cp $(BUILD)/$(TARGET).img $(COPY)/$(TARGET).img

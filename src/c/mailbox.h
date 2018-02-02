@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -61,3 +65,7 @@ extern void mailbox_write(mailbox_t *mailbox, mailbox0_channel_t channel, uint32
 
 // TODO: Verify it works...
 extern uint32_t mailbox_read_beta(mailbox_t *mailbox, mailbox0_channel_t channel);
+
+#ifdef __cplusplus
+    }
+#endif

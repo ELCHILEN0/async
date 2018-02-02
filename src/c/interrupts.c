@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -79,3 +83,7 @@ void interrupt_pabt() {
 void interrupt_dabt() {
     printf("[interrupt] Data Abort\r\n");
 }
+
+#ifdef __cplusplus
+    }
+#endif

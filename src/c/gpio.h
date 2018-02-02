@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -69,3 +73,7 @@ extern int gpio_read(unsigned int pin);
  * \return -1 on error
  */
 extern int gpio_write(unsigned int pin, bool high);
+
+#ifdef __cplusplus
+    }
+#endif

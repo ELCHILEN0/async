@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -50,6 +54,10 @@ int _fstat(int file, struct stat *st) {
     return 0;
 }
 
+int _getpid() { return -1; }
+int _exit() { return -1; }
+int _kill() { return -1; }
+
 int _isatty(int file) { return 1; }
 
 int _lseek(int file, int ptr, int dir) { return 0; }
@@ -99,3 +107,20 @@ caddr_t _sbrk(int incr) {
     heap_end += incr;
     return (caddr_t) prev_heap_end;
 }
+
+int __aeabi_atexit( 
+    void *object, 
+    void (*destructor)(void *), 
+    void *dso_handle) 
+{ 
+    static_cast<void>(object); 
+    static_cast<void>(destructor); 
+    static_cast<void>(dso_handle); 
+    return 0; 
+} 
+
+void* __dso_handle = nullptr;
+
+#ifdef __cplusplus
+    }
+#endif

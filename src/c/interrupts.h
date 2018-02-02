@@ -1,4 +1,6 @@
-
+#ifdef __cplusplus
+    extern "C" {
+#endif
 
 typedef struct {
     void (*handler)(void);
@@ -9,3 +11,7 @@ extern void register_interrupt_handler(interrupt_vector_t vector_table[], unsign
 
 extern interrupt_vector_t vector_table_svc[];
 extern interrupt_vector_t vector_table_irq[];
+
+#ifdef __cplusplus
+    }
+#endif
