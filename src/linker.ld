@@ -106,9 +106,9 @@ SECTIONS {
         __irq_stack_end_core_3 = .;
     }
 
-    __exidx_start = .;
     .ARM.exidx   : {
+        __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
     }
-    __exidx_end = .;
 }

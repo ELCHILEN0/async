@@ -1,3 +1,5 @@
+#ifndef MULTICORE_H
+#define MULTICORE_H
 #ifdef __cplusplus
     extern "C" {
 #endif
@@ -18,4 +20,5 @@ extern void __spin_unlock(spinlock_t *lock);
 
 #ifdef __cplusplus
     }
+#endif
 #endif

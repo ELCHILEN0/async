@@ -1,4 +1,5 @@
 #include "../cpp/msync.hpp"
+#include "../cpp/msync.cpp"
 
 #ifdef __cplusplus
     extern "C" {
@@ -103,7 +104,8 @@ void kernel_main ( uint32_t r0, uint32_t r1, uint32_t atags ) {
     core_enable(2, (uint32_t) _init_core);
     core_enable(3, (uint32_t) _init_core);
 
-    Producer p;
+    Producer *p = new Producer();
+    p->dispatch();
 
     // register_interrupt_handler(vector_table_svc, 0x80, &context_switch);
     // register_interrupt_handler(vector_table_svc, 0x81, context_switch);

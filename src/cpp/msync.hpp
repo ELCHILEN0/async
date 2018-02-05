@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include <cstdint>
-// #include <vector>
+#include <vector>
+#include "../c/multicore.h"
 
 #define LOCK_ID_MASK 0xFFFFFFF0
 #define ACQUIRE_FLAG (1 << 0)
@@ -18,7 +19,7 @@ typedef struct {
 extern core_mailbox_t *core_mailboxes;
 
 class Lock {
-    protected:
+    public:
         uint32_t id;
 };
 
@@ -26,27 +27,29 @@ class ClientLock: public Lock {
     public:
         void acquire();
         void release();
-        uint8_t owner();
 };
 
 class ProducerLock: public Lock {
-    private:
-        uint8_t owner;
+    public:
+        int8_t owner;
 
     public:
-        void assign(uint8_t owner);
-        void revoke(uint8_t owner);
+        void assign(int8_t owner);
+        void revoke(int8_t owner);
         bool is_assigned();
 };
 
 class Producer {
     private:
-        // std::vector<ProducerLock> locks;
+        std::vector<ProducerLock*> locks;
     
     public:
         void dispatch();
-        bool lock_exists();
-        ProducerLock get_lock();
+        bool lock_exists(uint32_t lock_id);
+        ProducerLock* get_lock(uint32_t lock_id);
+
+    // friend Lock;
+    // friend ProducerLock;
 };
 
 #endif
