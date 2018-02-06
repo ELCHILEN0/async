@@ -70,18 +70,22 @@ void interrupt_irq() {
 
 void interrupt_fiq() {
     printf("[interrupt] FIQ\r\n");
+    while(true);    
 }
 
 void interrupt_udef() {
     printf("[interrupt] Undefined Instruction\r\n");
+    while(true);    
 }
 
 void interrupt_pabt() {
     printf("[interrupt] Prefetch Abort\r\n");
+    while(true);    
 }
 
 void interrupt_dabt() {
     printf("[interrupt] Data Abort\r\n");
+    while(true);
 }
 
 #ifdef __cplusplus

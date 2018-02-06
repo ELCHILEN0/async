@@ -2,7 +2,7 @@
 #include <new> 
 
 void* operator new(size_t size) noexcept 
-{ 
+{
     return malloc(size); 
 } 
 
@@ -13,30 +13,34 @@ void operator delete(void *p) noexcept
 
 void* operator new[](size_t size) noexcept 
 { 
-    return operator new(size); // Same as regular new
-} 
+    return malloc(size);
 
 void operator delete[](void *p) noexcept 
-{ 
-    operator delete(p); // Same as regular delete
+{
+    free(p);
 } 
 
 void* operator new(size_t size, std::nothrow_t) noexcept 
 { 
-    return operator new(size); // Same as regular new 
+    return malloc(size); 
 } 
 
 void operator delete(void *p,  std::nothrow_t) noexcept 
 { 
-    operator delete(p); // Same as regular delete
+    free(p);
 } 
 
 void* operator new[](size_t size, std::nothrow_t) noexcept 
 { 
-    return operator new(size); // Same as regular new
+    return malloc(size); 
 } 
 
 void operator delete[](void *p,  std::nothrow_t) noexcept 
 { 
-    operator delete(p); // Same as regular delete
+    free(p);
 }
+
+void *operator new(size_t, void *p)     noexcept { return p; }
+void *operator new[](size_t, void *p)   noexcept { return p; }
+void  operator delete  (void *, void *) noexcept { };
+void  operator delete[](void *, void *) noexcept { };

@@ -1,24 +1,40 @@
 #include "msync.hpp"
 
-core_mailbox_t *core_mailboxes = (core_mailbox_t *) 0x40000080;
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
+extern "C" core_mailbox_t *core_mailboxes[4] = {
+    (core_mailbox_t *) 0x40000080,
+    (core_mailbox_t *) 0x40000090,
+    (core_mailbox_t *) 0x400000A0,
+    (core_mailbox_t *) 0x400000B0,    
+};
+
+#ifdef __cplusplus
+    }
+#endif
 
 void ClientLock::acquire() {
-    uint32_t core_id = get_core_id();    
-    core_mailboxes[core_id].set[0] = (this->id & LOCK_ID_MASK) | ACQUIRE_FLAG;
+    uint32_t core_id = get_core_id();
+    core_mailboxes[core_id]->set[0] = (this->id & LOCK_ID_MASK) | ACQUIRE_FLAG;
     // asm("SEV");
     // asm("WFE"); TODO ... signal handling
-    while(core_mailboxes[core_id].rd_clr[0] != 0);
+    while(core_mailboxes[core_id]->rd_clr[0] != 0);
+    printf("[core%d] acquired\r\n", core_id);    
 }
 
 void ClientLock::release() {
     uint32_t core_id = get_core_id();
-    core_mailboxes[core_id].set[0] = (this->id & LOCK_ID_MASK) | RELEASE_FLAG;
-    while(core_mailboxes[core_id].rd_clr[0] != 0); // TODO ... Policy choice, release immediately or wait for signal
+    printf("[core%d] released\r\n", core_id);    
+    core_mailboxes[core_id]->set[0] = (this->id & LOCK_ID_MASK) | RELEASE_FLAG;
+    while(core_mailboxes[core_id]->rd_clr[0] != 0); // TODO ... Policy choice, release immediately or wait for signal
 }
 
 void ProducerLock::assign(int8_t owner) {
     printf("[producer] Lock assigned to %d\r\n", owner);
     this->owner = owner;
+    core_mailboxes[owner]->rd_clr[0] = 0xFFFFFFFF;
 }
 
 void ProducerLock::revoke(int8_t owner) {
@@ -33,10 +49,15 @@ bool ProducerLock::is_assigned() {
 void Producer::dispatch() {
     printf("[producer] Dispatch...\r\n");
     
+    bool debug = true;
+    while(debug);
+
     while (true) {
         for (int core_id = 1; core_id < 3; core_id++) {
-            uint32_t lock_id = core_mailboxes[core_id].rd_clr[0];
+            uint32_t lock_id = core_mailboxes[core_id]->rd_clr[0];
             
+            printf("0x%X, 0x%X, 0x%X\r\n", lock_id, lock_id & ~ACQUIRE_FLAG, lock_id & RELEASE_FLAG);
+
             if (lock_id & ~ACQUIRE_FLAG)  {
                 auto lock = this->get_lock(lock_id);
                 if (!lock->is_assigned()) {
@@ -63,11 +84,13 @@ bool Producer::lock_exists(uint32_t lock_id) {
 
 ProducerLock* Producer::get_lock(uint32_t lock_id) {
     for (class ProducerLock *lock : this->locks) {
+        printf("0x%X == 0x%X\r\n", lock->id, lock_id & LOCK_ID_MASK);
         if (lock->id == (lock_id & LOCK_ID_MASK))
             return lock;
     }
 
-    auto lock = new ProducerLock();
+    printf("new lock\r\n");
+    auto lock = new ProducerLock(lock_id);
     this->locks.push_back(lock);
     return lock;
 }
