@@ -34,15 +34,14 @@ void slave_core() {
     int core_gpio[3] = { 6, 13, 19 };
 
     ClientLock *lock = new ClientLock(0x12345678);
-    // lock->id = 0x12345678 & LOCK_ID_MASK;
 
     while (true) {
-        for (int i = 0; i < 0x10000; i++);
+        for (int i = 0; i < 10*0x10000; i++);
         lock->acquire();
         gpio_write(core_gpio[core_id - 1], true);
         lock->release();
 
-        for (int i = 0; i < 0x10000; i++);
+        for (int i = 0; i < 10*0x10000; i++);
         lock->acquire();        
         gpio_write(core_gpio[core_id - 1], false);
         lock->release();        
@@ -108,8 +107,8 @@ void kernel_main ( uint32_t r0, uint32_t r1, uint32_t atags ) {
     slave_lock.flag = 0;
     
     core_enable(1, (uint32_t) _init_core);
-    // core_enable(2, (uint32_t) _init_core);
-    // core_enable(3, (uint32_t) _init_core);
+    core_enable(2, (uint32_t) _init_core);
+    core_enable(3, (uint32_t) _init_core);
 
     Producer *p = new Producer();
     p->dispatch();
