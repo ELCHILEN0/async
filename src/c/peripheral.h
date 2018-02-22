@@ -1,3 +1,6 @@
+#ifndef PERIPHERAL_H
+#define PERIPHERAL_H
+
 #ifdef __cplusplus
     extern "C" {
 #endif
@@ -26,4 +29,6 @@ extern uint32_t mmio_read(uint32_t reg);
 
 #ifdef __cplusplus
     }
+#endif
+
 #endif

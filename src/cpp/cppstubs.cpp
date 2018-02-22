@@ -1,6 +1,21 @@
 #include <cstdlib> 
 #include <new> 
 
+extern "C" {
+    int __aeabi_atexit( 
+        void *object, 
+        void (*destructor)(void *), 
+        void *dso_handle) 
+    { 
+        static_cast<void>(object); 
+        static_cast<void>(destructor); 
+        static_cast<void>(dso_handle); 
+        return 0; 
+    } 
+
+    // __dso_handle defined in cstubs, not linking properly when defined here.
+}
+
 void* operator new(size_t size) noexcept 
 {
     return malloc(size); 

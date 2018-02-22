@@ -1,30 +1,18 @@
-#ifndef __MSYNC_H_INCLUDED__
-#define __MSYNC_H_INCLUDED__
+#ifndef MSYNC_H
+#define MSYNC_H
 
 #include <iostream>
 #include <cstdint>
 #include <vector>
+
+#include <stdio.h>
+#include "../c/mailbox.h"
 #include "../c/multicore.h"
+#include "../c/interrupts.h"
 
 #define LOCK_ID_MASK 0xFFFFFFF0
 #define ACQUIRE_FLAG (1 << 0)
 #define RELEASE_FLAG (1 << 1)
-
-#ifdef __cplusplus
-    extern "C" {
-#endif
-
-typedef struct __attribute__((packed)) {
-    uint32_t set[4];
-    uint32_t _RESERVED_0[(0xC0 - 0x8C) / sizeof(uint32_t) - 1];
-    uint32_t rd_clr[4];
-} core_mailbox_t;
-
-// extern core_mailbox_t *core_mailboxes;
-
-#ifdef __cplusplus
-    }
-#endif
 
 class Lock {
     public:
@@ -37,10 +25,7 @@ class Lock {
 
 class ClientLock: public Lock {
     public:
-        ClientLock(uint32_t id) : Lock(id)
-        {
-
-        }
+        ClientLock(uint32_t id);
         void acquire();
         void release();
 };
@@ -61,15 +46,33 @@ class ProducerLock: public Lock {
 
 class Producer {
     private:
+        Producer() {};
+        Producer(Producer const&)           = delete;
+        void operator=(Producer const&)     = delete;
+
         std::vector<ProducerLock*> locks;
     
     public:
+        // Action Methods
         void dispatch();
-        bool lock_exists(uint32_t lock_id);
-        ProducerLock* get_lock(uint32_t lock_id);
+        void handle_request(uint8_t requestor);
 
-    // friend Lock;
-    // friend ProducerLock;
+        // Utility Methods
+        bool lock_exists(uint32_t lock_id);
+        ProducerLock *get_lock(uint32_t lock_id);
+
+        const uint8_t core_id() {
+            return 0; // TODO: initial core
+        }
+
+        static Producer& instance()
+        {
+            static Producer instance;
+            return instance;
+        }
 };
+
+inline core_mailbox_interrupt_t operator|(core_mailbox_interrupt_t l, core_mailbox_interrupt_t r)
+{ return static_cast<core_mailbox_interrupt_t>(static_cast<int>(l) | static_cast<int>(r)); }
 
 #endif

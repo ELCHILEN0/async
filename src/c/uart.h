@@ -1,3 +1,6 @@
+#ifndef UART_H
+#define UART_H
+
 #ifdef __cplusplus
     extern "C" {
 #endif
@@ -89,4 +92,6 @@ extern unsigned char uart_getc();
 
 #ifdef __cplusplus
     }
+#endif
+
 #endif

@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-    extern "C" {
-#endif
-
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -9,7 +5,7 @@
 
 #include "uart.h"
 
-int uart_write( void *reent, int fd, const char *buf, int len ) {
+int uart_puts( void *reent, int fd, const char *buf, int len ) {
     for (size_t i = 0; i < len; i++) {
 	    uart_putc(buf[i]);
     }
@@ -17,7 +13,7 @@ int uart_write( void *reent, int fd, const char *buf, int len ) {
     return len;
 }
 
-int uart_read( void *reent, int fd, char *buf, int len ) {
+int uart_gets( void *reent, int fd, char *buf, int len ) {
     for (size_t i = 0; i < len; i++) 
 		buf[i] = uart_getc();
 
@@ -37,8 +33,8 @@ const devoptab_t devoptab_uart = {
     "uart",
     NULL,
     NULL,
-    uart_write,
-    uart_read
+    uart_puts,
+    uart_gets
 };
 
 // TODO: Add more devices
@@ -53,10 +49,6 @@ int _fstat(int file, struct stat *st) {
     st->st_mode = S_IFCHR;
     return 0;
 }
-
-int _getpid() { return -1; }
-int _exit() { return -1; }
-int _kill() { return -1; }
 
 int _isatty(int file) { return 1; }
 
@@ -108,19 +100,24 @@ caddr_t _sbrk(int incr) {
     return (caddr_t) prev_heap_end;
 }
 
-int __aeabi_atexit( 
-    void *object, 
-    void (*destructor)(void *), 
-    void *dso_handle) 
-{ 
-    static_cast<void>(object); 
-    static_cast<void>(destructor); 
-    static_cast<void>(dso_handle); 
-    return 0; 
-} 
+void* __dso_handle = NULL;
 
-void* __dso_handle = nullptr;
+int _getpid() { return -1; }
+int _exit() { return -1; }
+int _kill() { return -1; }
 
-#ifdef __cplusplus
-    }
-#endif
+/*
+#include <malloc.h>
+void __malloc_lock (struct _reent *reent);
+void __malloc_unlock (struct _reent *reent);
+
+The malloc family of routines call these functions when they need to lock the memory pool. 
+The version of these routines supplied in the library use the lock API defined in sys/lock.h. 
+If multiple threads of execution can call malloc, or if malloc can be called reentrantly, 
+then you need to define your own versions of these functions in order to safely lock the memory 
+pool during a call. If you do not, the memory pool may become corrupted.
+
+A call to malloc may call __malloc_lock recursively; that is, the sequence of calls may go
+__malloc_lock, __malloc_lock, __malloc_unlock, __malloc_unlock. Any implementation of these
+routines must be careful to avoid causing a thread to wait for a lock that it already holds.
+*/
