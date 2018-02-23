@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <map>
+#include <algorithm>
 
 #include <stdio.h>
 #include "../c/mailbox.h"
@@ -13,6 +15,8 @@
 #define LOCK_ID_MASK 0xFFFFFFF0
 #define ACQUIRE_FLAG (1 << 0)
 #define RELEASE_FLAG (1 << 1)
+
+extern "C" void __enable_interrupts(void);
 
 class Lock {
     public:
@@ -50,9 +54,11 @@ class Producer {
         Producer(Producer const&)           = delete;
         void operator=(Producer const&)     = delete;
 
-        std::vector<ProducerLock*> locks;
+        std::map<uint32_t, ProducerLock*> locks;
+        std::vector<uint8_t> waiters;
     
     public:
+        friend void producer_dispatch_handler();
         // Action Methods
         void dispatch();
         void handle_request(uint8_t requestor);

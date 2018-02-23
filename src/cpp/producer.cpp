@@ -2,12 +2,33 @@
 
 // Producer interrupt handler
 void producer_dispatch_handler() {
-    // TODO: Round robin instead of ffs.
-    uint8_t requesting_core = (__builtin_ffs(core_interrupt_src_irq[Producer::instance().core_id()]) - 1) - 4;
-    Producer::instance().handle_request(requesting_core);
-}
+    uint32_t interrupt_src = core_interrupt_src_irq[Producer::instance().core_id()];
+    std::vector<uint8_t> requests;
+    while (interrupt_src != 0) {
+        uint8_t src_bit = __builtin_ffs(interrupt_src) - 1;
+        interrupt_src &= ~(1 << src_bit);
 
-extern "C" void __enable_interrupts(void);
+        requests.push_back(src_bit - 4);
+    }
+
+    auto waiters = Producer::instance().waiters;
+    for (auto request : requests) {
+        if (std::find(std::begin(waiters), std::end(waiters), request) == std::end(waiters)) {
+            waiters.push_back(request);
+        }
+    }
+
+    if (!waiters.empty()) {
+        Producer::instance().handle_request(waiters.front());
+        waiters.erase(waiters.begin());
+    }
+
+    // TODO: Round robin instead of ffs.
+    // uint8_t requesting_core = (__builtin_ffs(core_interrupt_src_irq[Producer::instance().core_id()]) - 1) - 4;
+    // Producer::instance().handle_request(requesting_core);
+
+    
+}
 
 void Producer::dispatch() {
     printf("[producer] Dispatch...\r\n");
@@ -38,21 +59,19 @@ void Producer::handle_request(uint8_t requestor) {
 }
 
 bool Producer::lock_exists(uint32_t lock_id) {
-    for (const class ProducerLock *lock : this->locks) {
-        if (lock->id == (lock_id & LOCK_ID_MASK))
-            return true;
-    }
+    std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
+    if (lock != locks.end())
+        return true;
 
     return false;
 }
 
 ProducerLock* Producer::get_lock(uint32_t lock_id) {
-    for (class ProducerLock *lock : this->locks) {
-        if (lock->id == (lock_id & LOCK_ID_MASK))
-            return lock;
-    }
+    std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
+    if (lock != locks.end())
+        return lock->second;
 
-    auto lock = new ProducerLock(lock_id);
-    this->locks.push_back(lock);
-    return lock;
+    auto new_lock = new ProducerLock(lock_id);
+    locks[lock_id] = new_lock;
+    return new_lock;
 }

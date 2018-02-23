@@ -10,6 +10,7 @@ ClientLock::ClientLock(uint32_t id) : Lock(id)
     uint8_t core_id = get_core_id();
     register_interrupt_handler(core_id, false, 4, (interrupt_vector_t) { .identify = NULL, .handle = client_lock_handler });
     core_mailbox_interrupt_routing(core_id, MB0_IRQ);
+    __enable_interrupts();
 }
 
 void ClientLock::acquire() {
