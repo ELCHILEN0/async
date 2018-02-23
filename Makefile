@@ -7,7 +7,7 @@ TOOLCHAIN = /root/x-tools/gcc-linaro-5.5.0-2017.10-x86_64_aarch64-elf/bin/aarch6
 
 AARCH = 
 CCFLAGS = -Wall -nostartfiles -ffreestanding -mcpu=cortex-a53 -ggdb 
-++FLAGS = $(CCFLAGS) -std=c++11 -fno-rtti -fno-exceptions -fno-use-cxa-atexit -fno-unwind-tables
+++FLAGS = $(CCFLAGS) -std=c++11 -fno-rtti -fno-exceptions -fno-use-cxa-atexit -fno-unwind-tables -ffunction-sections -fdata-sections -Wl,--gc-sections
 LIBS = -L /root/x-tools/sysroot-newlib-linaro-2017.10-aarch64-elf/usr/lib/include -L /root/x-tools/sysroot-newlib-linaro-2017.10-aarch64-elf/usr/lib
 
 TARGET = kernel8
@@ -20,11 +20,11 @@ SOBJ = bootcode64.o vectors64.o
 UOBJ = cstartup.o cstubs.o peripheral.o gpio.o mailbox.o interrupts.o timer.o uart.o multicore.o
 COBJ = init.o locks.o producer.o 
 
-all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).img #$(BUILD)/$(TARGET).list
+all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).img $(BUILD)/$(TARGET).list
 
 # ELF
 $(BUILD)/$(TARGET).elf: $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) $(addprefix $(BUILD)/, $(COBJ))
-	$(TOOLCHAIN)-g++ $(CCFLAGS) -T $(SOURCE)/linker.ld $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) $(addprefix $(BUILD)/, $(COBJ)) -o $(BUILD)/$(TARGET).elf
+	$(TOOLCHAIN)-g++ $(++FLAGS) -T $(SOURCE)/linker.ld $(addprefix $(BUILD)/, $(SOBJ)) $(addprefix $(BUILD)/, $(UOBJ)) $(addprefix $(BUILD)/, $(COBJ)) -o $(BUILD)/$(TARGET).elf
 
 # ELF to LIST
 $(BUILD)/$(TARGET).list: $(BUILD)/$(TARGET).elf
