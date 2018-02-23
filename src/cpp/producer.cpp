@@ -59,6 +59,8 @@ void Producer::handle_request(uint8_t requestor) {
 }
 
 bool Producer::lock_exists(uint32_t lock_id) {
+    lock_id &= LOCK_ID_MASK;
+    
     std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
     if (lock != locks.end())
         return true;
@@ -67,6 +69,8 @@ bool Producer::lock_exists(uint32_t lock_id) {
 }
 
 ProducerLock* Producer::get_lock(uint32_t lock_id) {
+    lock_id &= LOCK_ID_MASK;
+
     std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
     if (lock != locks.end())
         return lock->second;
