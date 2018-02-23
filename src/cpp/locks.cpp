@@ -31,9 +31,11 @@ void ProducerLock::assign(int8_t owner) {
     this->owner = owner;
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;
+    printf("assigned\r\n");
 }
 
 void ProducerLock::revoke(int8_t owner) {
+    printf("revoked\r\n");    
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;    
     this->owner = -1;    

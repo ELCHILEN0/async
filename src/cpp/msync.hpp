@@ -55,13 +55,13 @@ class Producer {
         void operator=(Producer const&)     = delete;
 
         std::map<uint32_t, ProducerLock*> locks;
-        std::vector<uint8_t> waiters;
+        std::vector<uint8_t> requests;
     
     public:
         friend void producer_dispatch_handler();
         // Action Methods
         void dispatch();
-        void handle_request(uint8_t requestor);
+        bool handle_request(uint8_t requestor);
 
         // Utility Methods
         bool lock_exists(uint32_t lock_id);

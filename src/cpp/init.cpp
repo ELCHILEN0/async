@@ -56,13 +56,13 @@ void slave_core() {
     ClientLock *lock = new ClientLock(0x12345678);
 
     while (true) {
-        for (int i = 0; i < 0x10000 * (core_id + 1) * 30; i++);
+        for (int i = 0; i < 0x10000 * (core_id + 1) * 60; i++);
         lock->acquire();
         gpio_write(core_gpio[core_id - 1], true);
-        lock->release();
+        // lock->release();
 
-        for (int i = 0; i < 0x10000 * (core_id + 1) * 30; i++);
-        lock->acquire();
+        for (int i = 0; i < 0x10000 * (core_id + 1) * 60; i++);
+        // lock->acquire();
         gpio_write(core_gpio[core_id - 1], false);  
         lock->release();
     }

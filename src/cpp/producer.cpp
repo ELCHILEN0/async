@@ -2,32 +2,27 @@
 
 // Producer interrupt handler
 void producer_dispatch_handler() {
+    auto requests = &Producer::instance().requests;
+
+    auto pending = requests->begin();
+    while (pending != requests->end()) {
+        if (Producer::instance().handle_request(*pending)) {
+            pending = requests->erase(pending);
+        } else {
+            pending = std::next(pending);
+        }
+    }
+
     uint32_t interrupt_src = core_interrupt_src_irq[Producer::instance().core_id()];
-    std::vector<uint8_t> requests;
     while (interrupt_src != 0) {
         uint8_t src_bit = __builtin_ffs(interrupt_src) - 1;
         interrupt_src &= ~(1 << src_bit);
 
-        requests.push_back(src_bit - 4);
-    }
-
-    auto waiters = Producer::instance().waiters;
-    for (auto request : requests) {
-        if (std::find(std::begin(waiters), std::end(waiters), request) == std::end(waiters)) {
-            waiters.push_back(request);
+        uint8_t requesting_core = src_bit - 4;
+        if (std::find(std::begin(*requests), std::end(*requests), requesting_core) == std::end(*requests)) {
+            requests->push_back(requesting_core);
         }
-    }
-
-    if (!waiters.empty()) {
-        Producer::instance().handle_request(waiters.front());
-        waiters.erase(waiters.begin());
-    }
-
-    // TODO: Round robin instead of ffs.
-    // uint8_t requesting_core = (__builtin_ffs(core_interrupt_src_irq[Producer::instance().core_id()]) - 1) - 4;
-    // Producer::instance().handle_request(requesting_core);
-
-    
+    }  
 }
 
 void Producer::dispatch() {
@@ -42,20 +37,23 @@ void Producer::dispatch() {
     while (true) asm("WFI");
 }
 
-void Producer::handle_request(uint8_t requestor) {
+bool Producer::handle_request(uint8_t requestor) {
     uint32_t lock_id = core_mailbox->rd_clr[this->core_id()][requestor];
-            
+    auto lock = this->get_lock(lock_id);    
+
     if (lock_id & ACQUIRE_FLAG)  {
-        auto lock = this->get_lock(lock_id);
         if (!lock->is_assigned()) {
             lock->assign(requestor);
+            return true;
         }
     } else if (lock_id & RELEASE_FLAG) {
-        auto lock = this->get_lock(lock_id);
         if (lock->is_assigned() && lock->owner == requestor) {
             lock->revoke(requestor);
+            return true;
         } 
     }
+
+    return false;
 }
 
 bool Producer::lock_exists(uint32_t lock_id) {
