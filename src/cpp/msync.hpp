@@ -8,38 +8,40 @@
 #include <algorithm>
 
 #include <stdio.h>
+#include "../c/timer.h"
 #include "../c/mailbox.h"
 #include "../c/multicore.h"
 #include "../c/interrupts.h"
 
-#define LOCK_ID_MASK 0xFFFFFFF0
-#define ACQUIRE_FLAG (1 << 0)
-#define RELEASE_FLAG (1 << 1)
+#define ACQUIRE_FLAG    (1 << 0)
+#define SPAN_FLAG       (1 << 1)
+#define LOCK_ID_MASK    ~(SPAN_FLAG | ACQUIRE_FLAG)
 
 extern "C" void __enable_interrupts(void);
 
 class Lock {
     public:
-        Lock(uint32_t id) : id(id)
+        Lock(uint64_t id) : id(id)
         {
 
         }
-        uint32_t id;
+        uint64_t id;
 };
 
 class ClientLock: public Lock {
     public:
-        ClientLock(uint32_t id);
+        ClientLock(uint64_t id);
         void acquire();
         void release();
 };
 
 class ProducerLock: public Lock {
     public:
+        int64_t timer_val;
         int8_t owner;
 
     public:
-        ProducerLock(uint32_t id) : Lock(id & LOCK_ID_MASK), owner(-1)
+        ProducerLock(uint64_t id) : Lock(id & LOCK_ID_MASK), owner(-1)
         {
 
         }
@@ -54,7 +56,7 @@ class Producer {
         Producer(Producer const&)           = delete;
         void operator=(Producer const&)     = delete;
 
-        std::map<uint32_t, ProducerLock*> locks;
+        std::map<uint64_t, ProducerLock*> locks;
         std::vector<uint8_t> requests;
     
     public:
@@ -64,8 +66,8 @@ class Producer {
         bool handle_request(uint8_t requestor);
 
         // Utility Methods
-        bool lock_exists(uint32_t lock_id);
-        ProducerLock *get_lock(uint32_t lock_id);
+        bool lock_exists(uint64_t lock_id);
+        ProducerLock *get_lock(uint64_t lock_id);
 
         const uint8_t core_id() {
             return 0; // TODO: initial core
@@ -80,5 +82,7 @@ class Producer {
 
 inline core_mailbox_interrupt_t operator|(core_mailbox_interrupt_t l, core_mailbox_interrupt_t r)
 { return static_cast<core_mailbox_interrupt_t>(static_cast<int>(l) | static_cast<int>(r)); }
+
+uint64_t get_timer_val();
 
 #endif

@@ -4,15 +4,7 @@
 void producer_dispatch_handler() {
     auto requests = &Producer::instance().requests;
 
-    auto pending = requests->begin();
-    while (pending != requests->end()) {
-        if (Producer::instance().handle_request(*pending)) {
-            pending = requests->erase(pending);
-        } else {
-            pending = std::next(pending);
-        }
-    }
-
+    // An interrupt source will not be cleared until the request is handled
     uint32_t interrupt_src = core_interrupt_src_irq[Producer::instance().core_id()];
     while (interrupt_src != 0) {
         uint8_t src_bit = __builtin_ffs(interrupt_src) - 1;
@@ -23,10 +15,19 @@ void producer_dispatch_handler() {
             requests->push_back(requesting_core);
         }
     }  
+
+    auto pending = requests->begin();
+    while (pending != requests->end()) {
+        if (Producer::instance().handle_request(*pending)) {
+            pending = requests->erase(pending);
+        } else {
+            pending = std::next(pending);
+        }
+    }
 }
 
 void Producer::dispatch() {
-    printf("[producer] Dispatch...\r\n");
+    core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
 
     register_interrupt_handler(this->core_id(), false, 5, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     register_interrupt_handler(this->core_id(), false, 6, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
@@ -41,12 +42,12 @@ bool Producer::handle_request(uint8_t requestor) {
     uint32_t lock_id = core_mailbox->rd_clr[this->core_id()][requestor];
     auto lock = this->get_lock(lock_id);    
 
-    if (lock_id & ACQUIRE_FLAG)  {
+    if (lock_id & ACQUIRE_FLAG) {
         if (!lock->is_assigned()) {
             lock->assign(requestor);
             return true;
         }
-    } else if (lock_id & RELEASE_FLAG) {
+    } else {
         if (lock->is_assigned() && lock->owner == requestor) {
             lock->revoke(requestor);
             return true;
@@ -56,24 +57,30 @@ bool Producer::handle_request(uint8_t requestor) {
     return false;
 }
 
-bool Producer::lock_exists(uint32_t lock_id) {
+bool Producer::lock_exists(uint64_t lock_id) {
     lock_id &= LOCK_ID_MASK;
     
-    std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
+    std::map<uint64_t, ProducerLock*>::iterator lock = locks.find(lock_id);
     if (lock != locks.end())
         return true;
 
     return false;
 }
 
-ProducerLock* Producer::get_lock(uint32_t lock_id) {
+ProducerLock* Producer::get_lock(uint64_t lock_id) {
     lock_id &= LOCK_ID_MASK;
 
-    std::map<uint32_t, ProducerLock*>::iterator lock = locks.find(lock_id);
+    std::map<uint64_t, ProducerLock*>::iterator lock = locks.find(lock_id);
     if (lock != locks.end())
         return lock->second;
 
     auto new_lock = new ProducerLock(lock_id);
     locks[lock_id] = new_lock;
     return new_lock;
+}
+
+uint64_t get_timer_val() {
+    uint64_t reg;
+    asm("MRS X0, CNTP_TVAL_EL0" : "=r" (reg) :: "x0");
+    return reg;
 }
