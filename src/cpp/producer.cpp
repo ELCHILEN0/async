@@ -4,6 +4,8 @@
 void producer_dispatch_handler() {
     auto requests = &Producer::instance().requests;
 
+    uint64_t int_count = pmu_read_ccnt();
+
     // An interrupt source will not be cleared until the request is handled
     uint32_t interrupt_src = core_interrupt_src_irq[Producer::instance().core_id()];
     while (interrupt_src != 0) {
@@ -13,12 +15,13 @@ void producer_dispatch_handler() {
         uint8_t requesting_core = src_bit - 4;
         if (std::find(std::begin(*requests), std::end(*requests), requesting_core) == std::end(*requests)) {
             requests->push_back(requesting_core);
+
         }
     }  
 
     auto pending = requests->begin();
     while (pending != requests->end()) {
-        if (Producer::instance().handle_request(*pending)) {
+        if (Producer::instance().handle_request(*pending, int_count)) {
             pending = requests->erase(pending);
         } else {
             pending = std::next(pending);
@@ -27,7 +30,13 @@ void producer_dispatch_handler() {
 }
 
 void Producer::dispatch() {
-    core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
+    // Prefer PMU
+    // core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
+
+    pmu_enable();
+
+    pmu_enable_ccnt();
+    pmu_reset_ccnt();
 
     register_interrupt_handler(this->core_id(), false, 5, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     register_interrupt_handler(this->core_id(), false, 6, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
@@ -38,13 +47,18 @@ void Producer::dispatch() {
     while (true) asm("WFI");
 }
 
-bool Producer::handle_request(uint8_t requestor) {
+bool Producer::handle_request(uint8_t requestor, uint64_t time_count) {
     uint32_t lock_id = core_mailbox->rd_clr[this->core_id()][requestor];
-    auto lock = this->get_lock(lock_id);    
+    auto lock = this->get_lock(lock_id);
 
     if (lock_id & ACQUIRE_FLAG) {
+        if (lock->perf_prev != 0)
+            lock->perf_prev = time_count;
+
         if (!lock->is_assigned()) {
+            lock->cont_count = time_count - lock->perf_prev;
             lock->assign(requestor);
+            lock->perf_prev = 0;
             return true;
         }
     } else {
@@ -77,10 +91,4 @@ ProducerLock* Producer::get_lock(uint64_t lock_id) {
     auto new_lock = new ProducerLock(lock_id);
     locks[lock_id] = new_lock;
     return new_lock;
-}
-
-uint64_t get_timer_val() {
-    uint64_t reg;
-    asm("MRS X0, CNTP_TVAL_EL0" : "=r" (reg) :: "x0");
-    return reg;
 }

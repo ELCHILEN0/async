@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include <stdio.h>
-#include "../c/timer.h"
+#include "../c/perf.h"
 #include "../c/mailbox.h"
 #include "../c/multicore.h"
 #include "../c/interrupts.h"
@@ -37,16 +37,18 @@ class ClientLock: public Lock {
 
 class ProducerLock: public Lock {
     public:
-        int64_t timer_val;
-        int8_t owner;
+        uint64_t perf_prev;
+        uint64_t hold_count;
+        uint64_t cont_count;
+        uint8_t owner;
 
     public:
         ProducerLock(uint64_t id) : Lock(id & LOCK_ID_MASK), owner(-1)
         {
 
         }
-        void assign(int8_t owner);
-        void revoke(int8_t owner);
+        void assign(uint8_t owner);
+        void revoke(uint8_t owner);
         bool is_assigned();
 };
 
@@ -63,7 +65,7 @@ class Producer {
         friend void producer_dispatch_handler();
         // Action Methods
         void dispatch();
-        bool handle_request(uint8_t requestor);
+        bool handle_request(uint8_t requestor, uint64_t time_count);
 
         // Utility Methods
         bool lock_exists(uint64_t lock_id);
@@ -82,7 +84,5 @@ class Producer {
 
 inline core_mailbox_interrupt_t operator|(core_mailbox_interrupt_t l, core_mailbox_interrupt_t r)
 { return static_cast<core_mailbox_interrupt_t>(static_cast<int>(l) | static_cast<int>(r)); }
-
-uint64_t get_timer_val();
 
 #endif
