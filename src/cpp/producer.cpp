@@ -52,13 +52,13 @@ bool Producer::handle_request(uint8_t requestor, uint64_t time_count) {
     auto lock = this->get_lock(lock_id);
 
     if (lock_id & ACQUIRE_FLAG) {
-        if (lock->perf_prev != 0)
-            lock->perf_prev = time_count;
+        if (lock->prev_count != 0)
+            lock->prev_count = time_count;
 
         if (!lock->is_assigned()) {
-            lock->cont_count = time_count - lock->perf_prev;
+            lock->cont_count = time_count - lock->prev_count;
             lock->assign(requestor);
-            lock->perf_prev = 0;
+            lock->prev_count = 0;
             return true;
         }
     } else {

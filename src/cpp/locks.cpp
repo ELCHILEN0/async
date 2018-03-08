@@ -28,18 +28,18 @@ void ClientLock::release() {
     asm("WFI"); // For more complex systems the result should be verified
 }
 
-void ProducerLock::assign(uint8_t owner) {
+void ProducerLock::assign(int8_t owner) {
     this->owner = owner;
-    this->perf_prev = pmu_read_ccnt();
+    this->prev_count = pmu_read_ccnt();
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;
 }
 
-void ProducerLock::revoke(uint8_t owner) {
+void ProducerLock::revoke(int8_t owner) {
+    this->owner = -1;    
+    this->hold_count = pmu_read_ccnt() - this->prev_count;
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;
-    this->hold_count += pmu_read_ccnt() - this->perf_prev;
-    this->owner = -1;    
 }
 
 bool ProducerLock::is_assigned() {
