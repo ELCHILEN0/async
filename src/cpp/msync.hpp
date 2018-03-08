@@ -1,13 +1,15 @@
 #ifndef MSYNC_H
 #define MSYNC_H
 
-#include <iostream>
 #include <cstdint>
 #include <vector>
 #include <map>
+
 #include <algorithm>
+#include <iostream>
 
 #include <stdio.h>
+
 #include "../c/perf.h"
 #include "../c/mailbox.h"
 #include "../c/multicore.h"
@@ -37,11 +39,17 @@ class ClientLock: public Lock {
 
 class ProducerLock: public Lock {
     public:
-        uint64_t timer_val;
-        int8_t owner; // TODO: Change to uint...
+        int8_t owner; // TODO: Change to uint...    
+        uint64_t prev_count;
+        uint64_t hold_count;
+        uint64_t cont_count;
 
     public:
-        ProducerLock(uint64_t id) : Lock(id & LOCK_ID_MASK), owner(-1)
+        ProducerLock(uint64_t id) : Lock(id & LOCK_ID_MASK),
+            owner(-1),
+            prev_count(0),
+            hold_count(0),
+            cont_count(0)
         {
 
         }
@@ -63,7 +71,7 @@ class Producer {
         friend void producer_dispatch_handler();
         // Action Methods
         void dispatch();
-        bool handle_request(uint8_t requestor);
+        bool handle_request(uint8_t requestor, uint64_t time_count);
 
         // Utility Methods
         bool lock_exists(uint64_t lock_id);

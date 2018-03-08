@@ -4,6 +4,8 @@
 void producer_dispatch_handler() {
     auto requests = &Producer::instance().requests;
 
+    uint64_t int_count = pmu_read_ccnt();
+
     // An interrupt source will not be cleared until the request is handled
     uint32_t interrupt_src = core_interrupt_src_irq[Producer::instance().core_id()];
     while (interrupt_src != 0) {
@@ -18,7 +20,7 @@ void producer_dispatch_handler() {
 
     auto pending = requests->begin();
     while (pending != requests->end()) {
-        if (Producer::instance().handle_request(*pending)) {
+        if (Producer::instance().handle_request(*pending, int_count)) {
             pending = requests->erase(pending);
         } else {
             pending = std::next(pending);
@@ -43,13 +45,18 @@ void Producer::dispatch() {
     while (true) asm("WFI");
 }
 
-bool Producer::handle_request(uint8_t requestor) {
+bool Producer::handle_request(uint8_t requestor, uint64_t time_count) {
     uint32_t lock_id = core_mailbox->rd_clr[this->core_id()][requestor];
     auto lock = this->get_lock(lock_id);    
 
     if (lock_id & ACQUIRE_FLAG) {
+        if (lock->prev_count != 0)
+            lock->prev_count = time_count;
+
         if (!lock->is_assigned()) {
+            lock->cont_count = time_count - lock->prev_count;
             lock->assign(requestor);
+            lock->prev_count = 0;
             return true;
         }
     } else {

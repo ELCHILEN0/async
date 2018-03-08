@@ -30,15 +30,16 @@ void ClientLock::release() {
 
 void ProducerLock::assign(int8_t owner) {
     this->owner = owner;
-    this->timer_val = pmu_read_ccnt();
+    this->prev_count = pmu_read_ccnt();
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;
 }
 
 void ProducerLock::revoke(int8_t owner) {
-    core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
-    core_mailbox->set[owner][0] = true;    
     this->owner = -1;    
+    this->hold_count = pmu_read_ccnt() - this->prev_count;
+    core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
+    core_mailbox->set[owner][0] = true;
 }
 
 bool ProducerLock::is_assigned() {
