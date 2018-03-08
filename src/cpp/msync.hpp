@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include <stdio.h>
-#include "../c/timer.h"
+#include "../c/perf.h"
 #include "../c/mailbox.h"
 #include "../c/multicore.h"
 #include "../c/interrupts.h"
@@ -37,8 +37,8 @@ class ClientLock: public Lock {
 
 class ProducerLock: public Lock {
     public:
-        int64_t timer_val;
-        int8_t owner;
+        uint64_t timer_val;
+        int8_t owner; // TODO: Change to uint...
 
     public:
         ProducerLock(uint64_t id) : Lock(id & LOCK_ID_MASK), owner(-1)
@@ -82,7 +82,5 @@ class Producer {
 
 inline core_mailbox_interrupt_t operator|(core_mailbox_interrupt_t l, core_mailbox_interrupt_t r)
 { return static_cast<core_mailbox_interrupt_t>(static_cast<int>(l) | static_cast<int>(r)); }
-
-uint64_t get_timer_val();
 
 #endif

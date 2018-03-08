@@ -30,7 +30,7 @@ void ClientLock::release() {
 
 void ProducerLock::assign(int8_t owner) {
     this->owner = owner;
-    this->timer_val = get_timer_val();
+    this->timer_val = pmu_read_ccnt();
     core_mailbox->rd_clr[Producer::instance().core_id()][owner] = ~(0);
     core_mailbox->set[owner][0] = true;
 }

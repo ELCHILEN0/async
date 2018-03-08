@@ -27,7 +27,12 @@ void producer_dispatch_handler() {
 }
 
 void Producer::dispatch() {
-    core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
+    // core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
+
+    pmu_enable();
+
+    pmu_enable_ccnt();
+    pmu_reset_ccnt();
 
     register_interrupt_handler(this->core_id(), false, 5, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     register_interrupt_handler(this->core_id(), false, 6, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
@@ -77,10 +82,4 @@ ProducerLock* Producer::get_lock(uint64_t lock_id) {
     auto new_lock = new ProducerLock(lock_id);
     locks[lock_id] = new_lock;
     return new_lock;
-}
-
-uint64_t get_timer_val() {
-    uint64_t reg;
-    asm("MRS X0, CNTP_TVAL_EL0" : "=r" (reg) :: "x0");
-    return reg;
 }
