@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 extern char *__text_start;
 extern char *__text_end;
@@ -39,3 +40,4 @@ void cstartup( uint32_t r0, uint32_t r1, uint32_t atags ) {
     
     while (1) { }
 }
+

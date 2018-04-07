@@ -3,9 +3,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "uart.h"
+#include "include/uart.h"
 
-int uart_puts( void *reent, int fd, const char *buf, int len ) {
+// TODO: Important!
+// TODO: linker wrap option, wrap some of the syscalls (eg. malloc/printf to kernel/nonkernel specific)
+
+int uart_write( void *reent, int fd, const char *buf, int len ) {
     for (size_t i = 0; i < len; i++) {
 	    uart_putc(buf[i]);
     }
@@ -13,7 +16,7 @@ int uart_puts( void *reent, int fd, const char *buf, int len ) {
     return len;
 }
 
-int uart_gets( void *reent, int fd, char *buf, int len ) {
+int uart_read( void *reent, int fd, char *buf, int len ) {
     for (size_t i = 0; i < len; i++) 
 		buf[i] = uart_getc();
 
@@ -33,8 +36,8 @@ const devoptab_t devoptab_uart = {
     "uart",
     NULL,
     NULL,
-    uart_puts,
-    uart_gets
+    uart_write,
+    uart_read
 };
 
 // TODO: Add more devices

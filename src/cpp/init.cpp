@@ -1,4 +1,6 @@
-#include "../cpp/msync.hpp"
+#include "include/msync.hpp"
+#include "include/context.hpp"
+#include "include/kernel.hpp"
 
 #ifdef __cplusplus
     extern "C" {
@@ -11,14 +13,14 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#include "../c/peripheral.h"
-#include "../c/gpio.h"
-#include "../c/timer.h"
-#include "../c/uart.h"
-#include "../c/interrupts.h"
+#include "../c/include/peripheral.h"
+#include "../c/include/gpio.h"
+#include "../c/include/timer.h"
+#include "../c/include/uart.h"
+#include "../c/include/interrupts.h"
 
-#include "../c/mailbox.h"
-#include "../c/multicore.h"
+#include "../c/include/mailbox.h"
+#include "../c/include/multicore.h"
 
 uint32_t act_message[] = {32, 0, 0x00038041, 8, 0, 130, 0, 0};
 
@@ -31,18 +33,21 @@ spinlock_t newlib_lock;
 
 void master_core () {
     __spin_lock(&newlib_lock);
-    printf("[core%d] Executing from 0x%lX\r\n", get_core_id(), (uint64_t) master_core);
+    printf("[core%d] Executing from 0x%lX, 0x%X\r\n", get_core_id(), (uint64_t) master_core, &newlib_lock);
     __spin_unlock(&newlib_lock);   
 
     Producer::instance().dispatch();
+}
 
-    while (true) {
-        for (int i = 0; i < 0x100000 * 30; i++);
-        gpio_write(5, true);
+void *test_function(void *arg) {
+    ClientLock *lock = new ClientLock(0x1234567899999);
 
-        for (int i = 0; i < 0x100000 * 30; i++);
-        gpio_write(5, false);
-    }
+    __spin_lock(&newlib_lock);
+    // lock->acquire();
+    printf("testing...\r\n");
+    // lock->release();
+    __spin_unlock(&newlib_lock);  
+    while(true);
 }
 
 void slave_core() {
@@ -53,19 +58,13 @@ void slave_core() {
     printf("[core%d] Executing from 0x%lX!\r\n", core_id, (uint64_t) slave_core);
     __spin_unlock(&newlib_lock);
 
-    ClientLock *lock = new ClientLock(0x1234567899999);
+    StaticKernel::instance().create_task(test_function, NULL);
+    auto task = StaticKernel::instance().next();
+    task->switch_to();
 
-    while (true) {
-        for (int i = 0; i < 0x10000 * (core_id + 1) * 60; i++);
-        lock->acquire();
-        gpio_write(core_gpio[core_id - 1], true);
-        // lock->release();
-
-        for (int i = 0; i < 0x10000 * (core_id + 1) * 60; i++);
-        // lock->acquire();
-        gpio_write(core_gpio[core_id - 1], false);  
-        lock->release();
-    }
+    asm("MSR SPSel, #0");
+    asm("BL __load_context");
+    while(true);
 }
 
 void cinit_core(void) {    

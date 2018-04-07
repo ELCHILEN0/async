@@ -2,7 +2,7 @@
 #define MULTICORE_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -27,7 +27,7 @@ extern int __spin_lock(spinlock_t *lock);
 extern void __spin_unlock(spinlock_t *lock);
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif

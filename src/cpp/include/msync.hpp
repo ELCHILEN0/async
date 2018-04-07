@@ -10,10 +10,10 @@
 
 #include <stdio.h>
 
-#include "../c/perf.h"
-#include "../c/mailbox.h"
-#include "../c/multicore.h"
-#include "../c/interrupts.h"
+#include "../../c/include/perf.h"
+#include "../../c/include/mailbox.h"
+#include "../../c/include/multicore.h"
+#include "../../c/include/interrupts.h"
 
 #define ACQUIRE_FLAG    (1 << 0)
 #define SPAN_FLAG       (1 << 1)

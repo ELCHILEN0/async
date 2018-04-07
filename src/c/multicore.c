@@ -1,7 +1,4 @@
-#include "multicore.h"
-
-#include <stdio.h>
-#include "peripheral.h"
+#include "include/multicore.h"
 
 // 18.5.2
 int __spin_lock(spinlock_t *lock) {

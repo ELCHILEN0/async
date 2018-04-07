@@ -1,8 +1,4 @@
-#include "interrupts.h"
-
-#ifdef __cplusplus
-    extern "C" {
-#endif
+#include "include/interrupts.h"
 
 interrupt_vector_t vector_table_esr[4][ESR_ELx_EC_MAX + 1] = {
     [0 ... 3][0 ... ESR_ELx_EC_MAX]  = { .identify = NULL, .handle = undefined_handler }
@@ -15,10 +11,6 @@ interrupt_vector_t vector_table_int[4][INT_MAX + 1] = {
 
 uint32_t *core_interrupt_src_irq = (uint32_t *) (VC_MMU_BASE | 0x60);
 uint32_t *core_interrupt_src_fiq = (uint32_t *) (VC_MMU_BASE | 0x70);
-
-#ifdef __cplusplus
-    }
-#endif
 
 void register_interrupt_handler(uint8_t core_id, bool sync, unsigned int entry, interrupt_vector_t vec) {
     (sync ? vector_table_esr[core_id] :
@@ -67,5 +59,6 @@ void interrupt_handler_irq() {
 }
 
 void undefined_handler() {
-    while(true); // Undefined Handler
+    bool catch = true;
+    while(catch); // Undefined Handler
 }

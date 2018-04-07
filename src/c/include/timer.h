@@ -2,7 +2,7 @@
 #define TIMER_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -76,12 +76,13 @@ extern void core_timer_init( core64_timer_control_t src, core64_timer_control_t 
 extern void core_timer_interrupt_routing( uint8_t core_id, core64_timer_interrupt_t type );
 extern void core_timer_rearm( uint64_t ticks );
 extern void core_timer_stop();
+extern uint64_t core_timer_count();
 
 extern local_timer_t *local_timer;
 extern core64_timer_t *core64_timer;
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif

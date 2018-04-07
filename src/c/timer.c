@@ -1,5 +1,5 @@
-#include "timer.h"
-#include "peripheral.h"
+#include "include/timer.h"
+#include "include/peripheral.h"
 
 local_timer_t *local_timer = (local_timer_t *) 0x40000024;
 core64_timer_t *core64_timer = (core64_timer_t *) 0x40000000;
@@ -37,4 +37,10 @@ extern void core_timer_rearm(uint64_t ticks) {
 
 extern void core_timer_stop() {
     asm volatile("MSR CNTP_CTL_EL0, %0" :: "r" (0));
+}
+
+extern uint64_t core_timer_count() {
+    uint64_t count;
+    asm volatile("MRS %0, CNTPCT_EL0" : "=r" (count));
+    return count;
 }

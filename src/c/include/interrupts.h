@@ -2,7 +2,7 @@
 #define INTERRUPTS_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stddef.h>
@@ -75,17 +75,17 @@
 
 typedef struct {
     void (*identify)(void);    
-    void (*handle)();
+    void (*handle)(void);
 } interrupt_vector_t;
 
 extern uint32_t *core_interrupt_src_irq;
 extern uint32_t *core_interrupt_src_fiq;
 
-extern void undefined_handler();
-extern void register_interrupt_handler(uint8_t core_id, bool sync, unsigned int entry, interrupt_vector_t vec);
+void undefined_handler();
+void register_interrupt_handler(uint8_t core_id, bool sync, unsigned int entry, interrupt_vector_t vec);
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif

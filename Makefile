@@ -18,7 +18,7 @@ COPY = /Volumes/boot
 
 SOBJ = bootcode64.o vectors64.o
 UOBJ = cstartup.o cstubs.o peripheral.o gpio.o mailbox.o interrupts.o timer.o uart.o multicore.o perf.o
-COBJ = init.o locks.o producer.o 
+COBJ = init.o locks.o producer.o context.o kernel.o
 
 all: $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).img $(BUILD)/$(TARGET).list
 

@@ -1,4 +1,4 @@
-#include "msync.hpp"
+#include "include/msync.hpp"
 
 // Producer interrupt handler
 void producer_dispatch_handler() {
@@ -15,7 +15,6 @@ void producer_dispatch_handler() {
         uint8_t requesting_core = src_bit - 4;
         if (std::find(std::begin(*requests), std::end(*requests), requesting_core) == std::end(*requests)) {
             requests->push_back(requesting_core);
-
         }
     }  
 

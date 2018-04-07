@@ -2,7 +2,7 @@
 #define UART_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -91,7 +91,7 @@ extern void uart_putc(unsigned char c);
 extern unsigned char uart_getc();
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif

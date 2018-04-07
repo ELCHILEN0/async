@@ -2,7 +2,7 @@
 #define GPIO_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -88,7 +88,7 @@ extern int gpio_write(unsigned int pin, bool high);
 extern int gpio_pull(unsigned int pin, bool up, bool off);
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif

@@ -2,7 +2,7 @@
 #define MAILBOX_H
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -91,7 +91,7 @@ extern uint32_t mailbox_read_beta(mailbox_t *mailbox, mailbox0_channel_t channel
 extern void core_mailbox_interrupt_routing( uint8_t core_id, core_mailbox_interrupt_t type );
 
 #ifdef __cplusplus
-    }
+};
 #endif
 
 #endif
