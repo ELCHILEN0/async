@@ -34,13 +34,13 @@ $(BUILD)/$(TARGET).list: $(BUILD)/$(TARGET).elf
 $(BUILD)/$(TARGET).img: $(BUILD)/$(TARGET).elf
 	$(TOOLCHAIN)-objcopy -O binary $(BUILD)/$(TARGET).elf $(BUILD)/$(TARGET).img
 
-$(addprefix $(BUILD)/, $(SOBJ)): $(BUILD)/%.o: $(SOURCE)/asm/%.s
+$(addprefix $(BUILD)/, $(SOBJ)): $(BUILD)/%.o: $(SOURCE)/asm/%.s $(SOURCE)/c/include
 	$(TOOLCHAIN)-as $(SOURCE)/asm/$(basename $(notdir $@)).s -o $@
 
-$(addprefix $(BUILD)/, $(UOBJ)): $(BUILD)/%.o: $(SOURCE)/c/%.c
+$(addprefix $(BUILD)/, $(UOBJ)): $(BUILD)/%.o: $(SOURCE)/c/%.c $(SOURCE)/c/include
 	$(TOOLCHAIN)-gcc $(CCFLAGS) -c $(SOURCE)/c/$(basename $(notdir $@)).c -o $@
 
-$(addprefix $(BUILD)/, $(COBJ)): $(BUILD)/%.o: $(SOURCE)/cpp/%.cpp
+$(addprefix $(BUILD)/, $(COBJ)): $(BUILD)/%.o: $(SOURCE)/cpp/%.cpp $(SOURCE)/cpp/include
 	$(TOOLCHAIN)-g++ $(++FLAGS) -c $(SOURCE)/cpp/$(basename $(notdir $@)).cpp -o $@
 
 copy: all

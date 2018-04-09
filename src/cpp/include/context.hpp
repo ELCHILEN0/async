@@ -11,9 +11,9 @@ typedef struct Frame {
     uint64_t reg[32];
 
     Frame(void *(*start_routine)(void *), void *arg) :
+        spsr(0b00100),
         reg({ 0 }) 
     { 
-        this->spsr = 0b00100;
         this->elr = (uint64_t) start_routine;
         this->reg[0] = (uint64_t) arg;
     }

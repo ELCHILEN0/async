@@ -28,6 +28,13 @@ void producer_dispatch_handler() {
     }
 }
 
+void Producer::configure_client() {
+    uint8_t core_id = get_core_id();
+    register_interrupt_handler(core_id, false, 4, (interrupt_vector_t) { .identify = NULL, .handle = client_lock_handler });
+    core_mailbox_interrupt_routing(core_id, MB0_IRQ);
+    __enable_interrupts();
+}
+
 void Producer::dispatch() {
     // Prefer PMU
     // core_timer_init( CT_CTRL_SRC_APB, CT_CTRL_INC2, 0x80000000 );
@@ -37,12 +44,14 @@ void Producer::dispatch() {
     pmu_enable_ccnt();
     pmu_reset_ccnt();
 
+    __disable_interrupts();
     register_interrupt_handler(this->core_id(), false, 5, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     register_interrupt_handler(this->core_id(), false, 6, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     register_interrupt_handler(this->core_id(), false, 7, (interrupt_vector_t) { .identify = NULL, .handle = producer_dispatch_handler });
     core_mailbox_interrupt_routing(this->core_id(), MB1_IRQ | MB2_IRQ | MB3_IRQ);
     __enable_interrupts();
     
+    alive = true;
     while (true) asm("WFI");
 }
 

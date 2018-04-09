@@ -20,19 +20,22 @@
 #define LOCK_ID_MASK    ~(SPAN_FLAG | ACQUIRE_FLAG)
 
 extern "C" void __enable_interrupts(void);
+extern "C" void __disable_interrupts(void);
+
+void producer_dispatch_handler();
+void client_lock_handler();
 
 class Lock {
     public:
         Lock(uint64_t id) : id(id)
-        {
-
-        }
+        { }
         uint64_t id;
 };
 
 class ClientLock: public Lock {
     public:
-        ClientLock(uint64_t id);
+        ClientLock(uint64_t id) : Lock(id)
+        { };
         void acquire();
         void release();
 };
@@ -50,9 +53,7 @@ class ProducerLock: public Lock {
             prev_count(0),
             hold_count(0),
             cont_count(0)
-        {
-
-        }
+        { }
         void assign(int8_t owner);
         void revoke(int8_t owner);
         bool is_assigned();
@@ -68,8 +69,10 @@ class Producer {
         std::vector<uint8_t> requests;
     
     public:
-        friend void producer_dispatch_handler();
+        bool alive;
+
         // Action Methods
+        void configure_client();
         void dispatch();
         bool handle_request(uint8_t requestor, uint64_t time_count);
 
@@ -86,6 +89,8 @@ class Producer {
             static Producer instance;
             return instance;
         }
+
+        friend void producer_dispatch_handler();
 };
 
 inline core_mailbox_interrupt_t operator|(core_mailbox_interrupt_t l, core_mailbox_interrupt_t r)

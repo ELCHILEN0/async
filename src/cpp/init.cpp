@@ -6,6 +6,8 @@
     extern "C" {
 #endif
 
+#include <memory>
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -32,16 +34,14 @@ extern void enable_mmu(void);
 spinlock_t newlib_lock;
 
 void master_core () {
-    __spin_lock(&newlib_lock);
-    printf("[core%d] Executing from 0x%lX, 0x%X\r\n", get_core_id(), (uint64_t) master_core, &newlib_lock);
-    __spin_unlock(&newlib_lock);   
+    // __spin_lock(&newlib_lock);
+    // printf("[core%d] Executing from 0x%lX\r\n", get_core_id(), (uint64_t) master_core);
+    // __spin_unlock(&newlib_lock);   
 
     Producer::instance().dispatch();
 }
 
 void *test_function(void *arg) {
-    ClientLock *lock = new ClientLock(0x1234567899999);
-
     __spin_lock(&newlib_lock);
     // lock->acquire();
     printf("testing...\r\n");
@@ -54,16 +54,32 @@ void slave_core() {
     int core_id = get_core_id();
     int core_gpio[3] = { 6, 13, 19 };
 
-    __spin_lock(&newlib_lock);
-    printf("[core%d] Executing from 0x%lX!\r\n", core_id, (uint64_t) slave_core);
-    __spin_unlock(&newlib_lock);
+    // look into the initialization order of Producer...
+    for (int i = 0; i < 0x1000000; i++);
 
-    StaticKernel::instance().create_task(test_function, NULL);
-    auto task = StaticKernel::instance().next();
-    task->switch_to();
+    while (!Producer::instance().alive);
+    Producer::instance().configure_client();
 
-    asm("MSR SPSel, #0");
-    asm("BL __load_context");
+    std::unique_ptr<ClientLock> lock(new ClientLock(0x1234567899999));
+
+    lock->acquire();
+    printf("[core%d] Executing from 0x%lX!\r\n", core_id, (uint64_t) slave_core);    
+    lock->release();
+    lock->acquire();
+    printf("this is a test\r\n");
+    lock->release();      
+
+    std::unique_ptr<ClientLock> lock2(new ClientLock(0x1234567899999));
+    lock2->acquire();
+    printf("this is another\r\n");
+    lock2->release();      
+
+
+    // Kernel::instance().create_task(test_function, NULL);
+    // Kernel::instance().get(core_id)->next()->switch_to();
+
+    // asm("MSR SPSel, #0");
+    // asm("BL __load_context");
     while(true);
 }
 
