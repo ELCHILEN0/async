@@ -17,7 +17,11 @@ extern char *__stack_end;
 extern char *__irq_stack_start;
 extern char *__irq_stack_end;
 
-extern void cinit_core ();
+extern void cinit_core();
+extern void __libc_init_array();
+
+// stub for __libc_init_array
+void _init() { };
 
 void init_bss() {
     char *bss = (char*) &__bss_start;
@@ -28,13 +32,7 @@ void init_bss() {
 
 void cstartup( uint32_t r0, uint32_t r1, uint32_t atags ) {
     init_bss();
-
-    // printf(".text:  [0x%.5X, 0x%.5X]\n", &__text_start, &__text_end);
-    // printf(".data:  [0x%.5X, 0x%.5X]\n", &__data_start, &__data_end);
-    // printf(".bss:   [0x%.5X, 0x%.5X]\n", &__bss_start, &__bss_end);
-    // printf(".heap:  [0x%.5X, 0x%.5X]\n", &__heap_start, &__heap_end);
-    // printf(".stack: [0x%.5X, 0x%.5X]\n", &__stack_start, &__stack_end);
-    // printf(".irq_s: [0x%.5X, 0x%.5X]\n", &__irq_stack_start, &__irq_stack_end);
+    __libc_init_array();
 
     cinit_core();
     

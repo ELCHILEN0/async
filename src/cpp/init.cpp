@@ -31,34 +31,37 @@ extern void __disable_interrupts(void);
 extern void _init_core(void);
 extern void enable_mmu(void);
 
+bool initialized_local_statics = false;
 spinlock_t newlib_lock;
 
 void master_core () {
-    // __spin_lock(&newlib_lock);
-    // printf("[core%d] Executing from 0x%lX\r\n", get_core_id(), (uint64_t) master_core);
-    // __spin_unlock(&newlib_lock);   
+    if (!initialized_local_statics) {
+        Producer::instance();
+        Kernel::instance();
+
+        initialized_local_statics = true;
+    }
 
     Producer::instance().dispatch();
 }
 
 void *test_function(void *arg) {
-    __spin_lock(&newlib_lock);
-    // lock->acquire();
+    // __spin_lock(&newlib_lock);
+    Kernel::instance().resource_lock->acquire();
     printf("testing...\r\n");
-    // lock->release();
-    __spin_unlock(&newlib_lock);  
+    Kernel::instance().resource_lock->release();
+    // __spin_unlock(&newlib_lock);  
     while(true);
 }
 
 void slave_core() {
+    while (!initialized_local_statics);
+
     int core_id = get_core_id();
     int core_gpio[3] = { 6, 13, 19 };
 
-    // look into the initialization order of Producer...
-    for (int i = 0; i < 0x1000000; i++);
-
-    while (!Producer::instance().alive);
     Producer::instance().configure_client();
+    for (int i = 0; i < 0x1000000; i++); // TODO: why...
 
     std::unique_ptr<ClientLock> lock(new ClientLock(0x1234567899999));
 
@@ -74,12 +77,11 @@ void slave_core() {
     printf("this is another\r\n");
     lock2->release();      
 
+    Kernel::instance().create_task(test_function, NULL);
+    Kernel::instance().get(core_id)->next()->switch_to();
 
-    // Kernel::instance().create_task(test_function, NULL);
-    // Kernel::instance().get(core_id)->next()->switch_to();
-
-    // asm("MSR SPSel, #0");
-    // asm("BL __load_context");
+    asm("MSR SPSel, #0");
+    asm("BL __load_context");
     while(true);
 }
 
@@ -103,7 +105,7 @@ void cinit_core(void) {
 
             core_enable(1, (uint64_t) _init_core);
             core_enable(2, (uint64_t) _init_core);
-            core_enable(3, (uint64_t) _init_core); 
+            // core_enable(3, (uint64_t) _init_core); 
 
             // init_vector_tables();
             // register_interrupt_handler(vector_table_irq, 0x80, test_handler);

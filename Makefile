@@ -7,7 +7,7 @@ TOOLCHAIN = /root/x-tools/gcc-linaro-5.5.0-2017.10-x86_64_aarch64-elf/bin/aarch6
 
 AARCH = 
 CCFLAGS = -Wall -nostartfiles -ffreestanding -mcpu=cortex-a53 -ggdb 
-++FLAGS = $(CCFLAGS) -std=c++11 -fno-rtti -fno-exceptions -fno-use-cxa-atexit -fno-unwind-tables -ffunction-sections -fdata-sections -Wl,--gc-sections
+++FLAGS = $(CCFLAGS) -std=c++11 -fno-threadsafe-statics -fno-rtti -fno-exceptions -fno-use-cxa-atexit -fno-unwind-tables -ffunction-sections -fdata-sections -Wl,--gc-sections
 LIBS = -L /root/x-tools/sysroot-newlib-linaro-2017.10-aarch64-elf/usr/lib/include -L /root/x-tools/sysroot-newlib-linaro-2017.10-aarch64-elf/usr/lib
 
 TARGET = kernel8

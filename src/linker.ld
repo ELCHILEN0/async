@@ -9,12 +9,6 @@ MEMORY
 
 SECTIONS {
     __text_start = .;
-    /*
-    .init : {
-        *(.init)
-    } > RAM
-    */
-
     .text : {
         *(.text)
     } > RAM

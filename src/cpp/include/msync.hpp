@@ -65,12 +65,11 @@ class Producer {
         Producer(Producer const&)           = delete;
         void operator=(Producer const&)     = delete;
 
+        bool ready = false;
         std::map<uint64_t, ProducerLock*> locks;
         std::vector<uint8_t> requests;
     
     public:
-        bool alive;
-
         // Action Methods
         void configure_client();
         void dispatch();

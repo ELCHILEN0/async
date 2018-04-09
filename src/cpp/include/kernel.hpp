@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 #include "../../c/include/multicore.h"
-
+#include "../../c/include/gpio.h"
 class Kernel;
 
 extern "C" spinlock_t newlib_lock;
@@ -30,8 +30,9 @@ private:
     std::atomic<int64_t> next_id;     
     std::vector<std::shared_ptr<Task>> tasks;
 
+public:
     std::unique_ptr<ClientLock> resource_lock;
-    
+
     Kernel() :
     cpu({
         std::shared_ptr<CPU>(new CPU()),

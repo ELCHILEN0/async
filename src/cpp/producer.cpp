@@ -29,6 +29,8 @@ void producer_dispatch_handler() {
 }
 
 void Producer::configure_client() {
+    while (!ready);
+
     uint8_t core_id = get_core_id();
     register_interrupt_handler(core_id, false, 4, (interrupt_vector_t) { .identify = NULL, .handle = client_lock_handler });
     core_mailbox_interrupt_routing(core_id, MB0_IRQ);
@@ -51,7 +53,7 @@ void Producer::dispatch() {
     core_mailbox_interrupt_routing(this->core_id(), MB1_IRQ | MB2_IRQ | MB3_IRQ);
     __enable_interrupts();
     
-    alive = true;
+    ready = true;
     while (true) asm("WFI");
 }
 
