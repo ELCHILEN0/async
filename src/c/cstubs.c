@@ -103,8 +103,6 @@ caddr_t _sbrk(int incr) {
     return (caddr_t) prev_heap_end;
 }
 
-void* __dso_handle = NULL;
-
 int _getpid() { return -1; }
 int _exit() { return -1; }
 int _kill() { return -1; }

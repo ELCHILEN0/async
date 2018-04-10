@@ -13,12 +13,17 @@ extern "C" {
         return 0; 
     } 
 
-    // __dso_handle defined in cstubs, not linking properly when defined here.
+    void* __dso_handle = NULL;
 }
 
 void* operator new(size_t size) noexcept 
 {
-    return malloc(size); 
+    // TODO: align to 16?
+    size = (size + 15) & ~15;
+
+    void *test = malloc(size);
+    return test;
+    // return malloc(size); 
 } 
 
 void operator delete(void *p) noexcept 
@@ -29,6 +34,7 @@ void operator delete(void *p) noexcept
 void* operator new[](size_t size) noexcept 
 { 
     return malloc(size);
+}
 
 void operator delete[](void *p) noexcept 
 {
@@ -55,7 +61,7 @@ void operator delete[](void *p,  std::nothrow_t) noexcept
     free(p);
 }
 
-void *operator new(size_t, void *p)     noexcept { return p; }
-void *operator new[](size_t, void *p)   noexcept { return p; }
-void  operator delete  (void *, void *) noexcept { };
-void  operator delete[](void *, void *) noexcept { };
+// void *operator new(size_t, void *p)     noexcept { return p; }
+// void *operator new[](size_t, void *p)   noexcept { return p; }
+// void  operator delete  (void *, void *) noexcept { };
+// void  operator delete[](void *, void *) noexcept { };
