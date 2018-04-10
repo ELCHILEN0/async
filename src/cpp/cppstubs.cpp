@@ -16,14 +16,13 @@ extern "C" {
     void* __dso_handle = NULL;
 }
 
+constexpr size_t compute_alignment(size_t size) {
+    return (size + 15) & ~15;
+}
+
 void* operator new(size_t size) noexcept 
 {
-    // TODO: align to 16?
-    size = (size + 15) & ~15;
-
-    void *test = malloc(size);
-    return test;
-    // return malloc(size); 
+    return malloc(compute_alignment(size));
 } 
 
 void operator delete(void *p) noexcept 
@@ -33,7 +32,7 @@ void operator delete(void *p) noexcept
 
 void* operator new[](size_t size) noexcept 
 { 
-    return malloc(size);
+    return malloc(compute_alignment(size));
 }
 
 void operator delete[](void *p) noexcept 
@@ -43,7 +42,7 @@ void operator delete[](void *p) noexcept
 
 void* operator new(size_t size, std::nothrow_t) noexcept 
 { 
-    return malloc(size); 
+    return malloc(compute_alignment(size)); 
 } 
 
 void operator delete(void *p,  std::nothrow_t) noexcept 
@@ -53,7 +52,7 @@ void operator delete(void *p,  std::nothrow_t) noexcept
 
 void* operator new[](size_t size, std::nothrow_t) noexcept 
 { 
-    return malloc(size); 
+    return malloc(compute_alignment(size)); 
 } 
 
 void operator delete[](void *p,  std::nothrow_t) noexcept 

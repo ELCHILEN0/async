@@ -47,9 +47,9 @@ void master_core () {
 
 void *test_function(void *arg) {
     // __spin_lock(&newlib_lock);
-    Kernel::instance().resource_lock->acquire();
-    printf("testing...\r\n");
-    Kernel::instance().resource_lock->release();
+    // Kernel::instance().resource_lock->acquire();
+    // printf("testing...\r\n");
+    // Kernel::instance().resource_lock->release();
     // __spin_unlock(&newlib_lock);  
     while(true);
 }
@@ -61,21 +61,25 @@ void slave_core() {
     int core_gpio[3] = { 6, 13, 19 };
 
     Producer::instance().configure_client();
-    for (int i = 0; i < 0x1000000; i++); // TODO: why...
+    for (int i = 0; i < 0x1000000; i++); // TODO: momentary stall, this isnt really great, but code breaks
 
-    std::unique_ptr<ClientLock> lock(new ClientLock(0x1234567899999));
+    std::unique_ptr<ClientLock> lock1(new ClientLock(0x1234567899999));
 
-    lock->acquire();
+    lock1->acquire();
     printf("[core%d] Executing from 0x%lX!\r\n", core_id, (uint64_t) slave_core);    
-    lock->release();
-    lock->acquire();
-    printf("this is a test\r\n");
-    lock->release();      
+    lock1->release();
+    lock1->acquire();
+    printf("lock1 test\r\n");
+    lock1->release();      
 
     std::unique_ptr<ClientLock> lock2(new ClientLock(0x1234567899999));
     lock2->acquire();
-    printf("this is another\r\n");
-    lock2->release();      
+    printf("lock2 test\r\n");
+    lock2->release(); 
+
+    Kernel::instance().resource_lock->acquire();   
+    printf("lock3 test\r\n");  
+    Kernel::instance().resource_lock->release();     
 
     Kernel::instance().create_task(test_function, NULL);
     Kernel::instance().get(core_id)->next()->switch_to();

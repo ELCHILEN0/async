@@ -3,8 +3,8 @@
 void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     std::shared_ptr<Task> task = std::shared_ptr<Task>(new Task());
 
-    __spin_lock(&newlib_lock);
-    // resource_lock->acquire();
+    // __spin_lock(&newlib_lock);
+    resource_lock->acquire();
     task->id = next_id++;
     task->stack_size = 4096;
     task->stack_base = malloc(task->stack_size);
@@ -15,8 +15,8 @@ void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     // TODO: locking with the api...
     tasks.push_back(task);
 
-    // resource_lock->release();
-    __spin_unlock(&newlib_lock);
+    resource_lock->release();
+    // __spin_unlock(&newlib_lock);
 }
 
 void Kernel::delete_task(std::shared_ptr<Task> task) {
@@ -32,14 +32,14 @@ void Kernel::delete_task(std::shared_ptr<Task> task) {
 }
 
 std::shared_ptr<Task> Kernel::next() {
-    __spin_lock(&newlib_lock);
-    // resource_lock->acquire();
+    // __spin_lock(&newlib_lock);
+    resource_lock->acquire();
 
     auto task = tasks.front();
     tasks.erase(tasks.begin());
     
-    // resource_lock->release();    
-    __spin_unlock(&newlib_lock);
+    resource_lock->release();    
+    // __spin_unlock(&newlib_lock);
 
     return task;
 }
