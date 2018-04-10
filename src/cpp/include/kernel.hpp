@@ -4,6 +4,9 @@
 #include <atomic>
 #include <memory>
 #include <vector>
+#include <utility>
+#include <experimental/any>
+
 #include "context.hpp"
 
 #include "msync.hpp"
@@ -12,9 +15,20 @@
 
 #include "../../c/include/multicore.h"
 #include "../../c/include/gpio.h"
-class Kernel;
 
 extern "C" spinlock_t newlib_lock;
+
+class Kernel;
+
+enum system_call {
+    SYS_ACQUIRE,
+    SYS_RELEASE,
+    SYS_EXIT,
+};
+
+void kernel_interrupt_handler();
+
+int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args);
 
 // CPU Kernel
 class CPU {

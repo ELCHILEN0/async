@@ -46,10 +46,11 @@ void master_core () {
 }
 
 void *test_function(void *arg) {
+    // std::vector<std::experimental::fundamentals_v1::any> args = {1, "two", 3.0};
+    // syscall(SYS_ACQUIRE, args);
+
     // __spin_lock(&newlib_lock);
-    // Kernel::instance().resource_lock->acquire();
     // printf("testing...\r\n");
-    // Kernel::instance().resource_lock->release();
     // __spin_unlock(&newlib_lock);  
     while(true);
 }
@@ -80,6 +81,8 @@ void slave_core() {
     Kernel::instance().resource_lock->acquire();   
     printf("lock3 test\r\n");  
     Kernel::instance().resource_lock->release();     
+
+    // register_interrupt_handler(core_id, true, ESR_ELx_EC_SVC64, { .identify = NULL, .handle = kernel_interrupt_handler });
 
     Kernel::instance().create_task(test_function, NULL);
     Kernel::instance().get(core_id)->next()->switch_to();

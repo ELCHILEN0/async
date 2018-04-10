@@ -1,5 +1,28 @@
 #include "include/kernel.hpp"
 
+void kernel_interrupt_handler() {
+    __spin_lock(&newlib_lock);
+    printf("syscall\r\n");
+    __spin_unlock(&newlib_lock);
+
+    while(true);
+}
+
+// void Kernel::dispatch() {
+
+// }
+
+int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args) {
+    int ret_code;
+
+    asm volatile("STP %0, %1, [SP, #-16]!" :: "r" (req_id), "r" (&args));
+    asm volatile("SVC 0x80");
+    asm volatile("ADD SP, SP, #16");
+    asm volatile("MOV %0, X0" : "=g" (ret_code));
+
+    return ret_code;
+}
+
 void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     std::shared_ptr<Task> task = std::shared_ptr<Task>(new Task());
 
@@ -10,9 +33,7 @@ void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     task->stack_base = malloc(task->stack_size);
 
     task->frame = new (task->stack_base + task->stack_size - sizeof(aarch64_frame_t)) Frame(start_routine, arg);
-    task->switch_to();
     
-    // TODO: locking with the api...
     tasks.push_back(task);
 
     resource_lock->release();
