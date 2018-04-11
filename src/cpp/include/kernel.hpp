@@ -4,14 +4,14 @@
 #include <atomic>
 #include <memory>
 #include <vector>
-#include <utility>
-#include <experimental/any>
+#include <array>
 
 #include "context.hpp"
 
 #include "msync.hpp"
 
 #include <stdlib.h>
+#include <experimental/any>
 
 #include "../../c/include/multicore.h"
 #include "../../c/include/gpio.h"
@@ -29,6 +29,7 @@ enum system_call {
 void kernel_interrupt_handler();
 
 int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args);
+int sys_exit();
 
 // CPU Kernel
 class CPU {
@@ -46,6 +47,7 @@ private:
 
 public:
     std::unique_ptr<ClientLock> resource_lock;
+    std::unique_ptr<ClientLock> usr_task_lock;
 
     Kernel() :
     cpu({
@@ -53,7 +55,8 @@ public:
         std::shared_ptr<CPU>(new CPU()),
         std::shared_ptr<CPU>(new CPU()),
     }),
-    resource_lock(new ClientLock(0x1234567899999))
+    resource_lock(new ClientLock(0x1111111111111)),
+    usr_task_lock(new ClientLock(0x2222222222222))
     { };
     Kernel(Kernel const&)           = delete;
     void operator=(Kernel const&)   = delete;
@@ -63,6 +66,9 @@ public:
     void delete_task(std::shared_ptr<Task> task);
 
     std::shared_ptr<Task> next();
+    void ready(std::shared_ptr<Task> task);
+
+    void dispatch();
 
     static Kernel& instance()
     {

@@ -2,11 +2,11 @@
 #include "include/context.hpp"
 #include "include/kernel.hpp"
 
+#include <memory>
+
 #ifdef __cplusplus
     extern "C" {
 #endif
-
-#include <memory>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -46,13 +46,15 @@ void master_core () {
 }
 
 void *test_function(void *arg) {
-    // std::vector<std::experimental::fundamentals_v1::any> args = {1, "two", 3.0};
-    // syscall(SYS_ACQUIRE, args);
+    while (true);
 
-    // __spin_lock(&newlib_lock);
-    // printf("testing...\r\n");
-    // __spin_unlock(&newlib_lock);  
-    while(true);
+    std::vector<std::experimental::fundamentals_v1::any> args = {1, "two", 3.0};
+
+    syscall(SYS_ACQUIRE, args);
+    printf("acquired, now releasing...\r\n");
+    syscall(SYS_RELEASE, args);
+
+    sys_exit();
 }
 
 void slave_core() {
@@ -62,9 +64,10 @@ void slave_core() {
     int core_gpio[3] = { 6, 13, 19 };
 
     Producer::instance().configure_client();
-    for (int i = 0; i < 0x1000000; i++); // TODO: momentary stall, this isnt really great, but code breaks
+    register_interrupt_handler(core_id, true, ESR_ELx_EC_SVC64, { .identify = NULL, .handle = kernel_interrupt_handler });
+    for (int i = 0; i < 0x1000000; i++); // TODO: momentary stall, why this is fixes stuff is a mystery...
 
-    std::unique_ptr<ClientLock> lock1(new ClientLock(0x1234567899999));
+    std::unique_ptr<ClientLock> lock1(new ClientLock(0x1111111111111));
 
     lock1->acquire();
     printf("[core%d] Executing from 0x%lX!\r\n", core_id, (uint64_t) slave_core);    
@@ -73,7 +76,7 @@ void slave_core() {
     printf("lock1 test\r\n");
     lock1->release();      
 
-    std::unique_ptr<ClientLock> lock2(new ClientLock(0x1234567899999));
+    std::unique_ptr<ClientLock> lock2(new ClientLock(0x1111111111111));
     lock2->acquire();
     printf("lock2 test\r\n");
     lock2->release(); 
@@ -81,8 +84,6 @@ void slave_core() {
     Kernel::instance().resource_lock->acquire();   
     printf("lock3 test\r\n");  
     Kernel::instance().resource_lock->release();     
-
-    // register_interrupt_handler(core_id, true, ESR_ELx_EC_SVC64, { .identify = NULL, .handle = kernel_interrupt_handler });
 
     Kernel::instance().create_task(test_function, NULL);
     Kernel::instance().get(core_id)->next()->switch_to();

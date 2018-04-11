@@ -1,16 +1,44 @@
 #include "include/kernel.hpp"
 
 void kernel_interrupt_handler() {
-    __spin_lock(&newlib_lock);
-    printf("syscall\r\n");
-    __spin_unlock(&newlib_lock);
-
-    while(true);
+    Kernel::instance().dispatch();
 }
 
-// void Kernel::dispatch() {
+void *idle_proc(void *arg) {
+    while (true);
+}
 
-// }
+void Kernel::dispatch() {
+    int core_id = get_core_id();
+
+    auto self = get(core_id);
+
+    self->current->switch_from();
+
+    // syscall ABI dependent
+    unsigned long *params = (unsigned long *) self->current->frame + sizeof(aarch64_frame_t);
+    auto request = params[0];
+    auto args = (std::vector<std::experimental::fundamentals_v1::any> *) params[1];
+
+    switch (request) {
+        case SYS_ACQUIRE:
+            usr_task_lock->acquire();
+            self->current->sys_ret = 0;
+            break;
+
+        case SYS_RELEASE:
+            usr_task_lock->release();
+            self->current->sys_ret = 0;            
+            break;
+
+        case SYS_EXIT:
+            create_task(idle_proc, NULL);
+            self->next();
+            break;
+    }
+    
+    self->current->switch_to();
+}
 
 int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args) {
     int ret_code;
@@ -23,6 +51,11 @@ int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals
     return ret_code;
 }
 
+int sys_exit() {
+    std::vector<std::experimental::fundamentals_v1::any> args;
+    return syscall(SYS_EXIT, args);
+}
+
 void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     std::shared_ptr<Task> task = std::shared_ptr<Task>(new Task());
 
@@ -33,10 +66,9 @@ void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     task->stack_base = malloc(task->stack_size);
 
     task->frame = new (task->stack_base + task->stack_size - sizeof(aarch64_frame_t)) Frame(start_routine, arg);
-    
-    tasks.push_back(task);
-
     resource_lock->release();
+
+    ready(task);    
     // __spin_unlock(&newlib_lock);
 }
 
@@ -63,6 +95,14 @@ std::shared_ptr<Task> Kernel::next() {
     // __spin_unlock(&newlib_lock);
 
     return task;
+}
+
+void Kernel::ready(std::shared_ptr<Task> task) {
+    resource_lock->acquire();
+    
+    tasks.push_back(task);
+
+    resource_lock->release();
 }
 
 std::shared_ptr<Task> CPU::next() {

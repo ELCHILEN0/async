@@ -22,7 +22,8 @@ constexpr size_t compute_alignment(size_t size) {
 
 void* operator new(size_t size) noexcept 
 {
-    return malloc(compute_alignment(size));
+    void *p = malloc(compute_alignment(size));
+    return p;
 } 
 
 void operator delete(void *p) noexcept 
@@ -42,7 +43,8 @@ void operator delete[](void *p) noexcept
 
 void* operator new(size_t size, std::nothrow_t) noexcept 
 { 
-    return malloc(compute_alignment(size)); 
+    void *p = malloc(compute_alignment(size));
+    return p;
 } 
 
 void operator delete(void *p,  std::nothrow_t) noexcept 

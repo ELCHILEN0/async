@@ -16,6 +16,7 @@ typedef struct Frame {
     { 
         this->elr = (uint64_t) start_routine;
         this->reg[0] = (uint64_t) arg;
+        // TODO: this->reg[30] = (uint64_t) exit;
     }
 } aarch64_frame_t;
 
