@@ -48,11 +48,9 @@ void master_core () {
 void *test_function(void *arg) {
     while (true);
 
-    std::vector<std::experimental::fundamentals_v1::any> args = {1, "two", 3.0};
-
-    syscall(SYS_ACQUIRE, args);
+    sys_acquire();
     printf("acquired, now releasing...\r\n");
-    syscall(SYS_RELEASE, args);
+    sys_release();
 
     sys_exit();
 }

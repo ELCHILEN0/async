@@ -40,10 +40,10 @@ void Kernel::dispatch() {
     self->current->switch_to();
 }
 
-int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args) {
+int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> *args) {
     int ret_code;
 
-    asm volatile("STP %0, %1, [SP, #-16]!" :: "r" (req_id), "r" (&args));
+    asm volatile("STP %0, %1, [SP, #-16]!" :: "r" (req_id), "r" (args));
     asm volatile("SVC 0x80");
     asm volatile("ADD SP, SP, #16");
     asm volatile("MOV %0, X0" : "=g" (ret_code));
@@ -51,9 +51,24 @@ int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals
     return ret_code;
 }
 
+template<typename ... T>
+int syscall(enum system_call req_id, T ... args)
+{
+    std::vector<std::experimental::fundamentals_v1::any> params = {args ...};
+
+    syscall(req_id, &params);
+}
+
 int sys_exit() {
-    std::vector<std::experimental::fundamentals_v1::any> args;
-    return syscall(SYS_EXIT, args);
+    return syscall(SYS_EXIT, 1, "two", 3.0);
+}
+
+int sys_acquire() {
+    return syscall(SYS_ACQUIRE);
+}
+
+int sys_release() {
+    return syscall(SYS_RELEASE);
 }
 
 void Kernel::create_task(void *(*start_routine)(void *), void *arg) {

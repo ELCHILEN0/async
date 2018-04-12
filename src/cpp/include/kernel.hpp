@@ -28,8 +28,10 @@ enum system_call {
 
 void kernel_interrupt_handler();
 
-int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> args);
+// int syscall(enum system_call req_id, std::vector<std::experimental::fundamentals_v1::any> *args);
 int sys_exit();
+int sys_acquire();
+int sys_release();
 
 // CPU Kernel
 class CPU {
