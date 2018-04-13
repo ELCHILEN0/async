@@ -22,12 +22,12 @@ void Kernel::dispatch() {
 
     switch (request) {
         case SYS_ACQUIRE:
-            usr_task_lock->acquire();
+            resource_lock->acquire();
             self->current->sys_ret = 0;
             break;
 
         case SYS_RELEASE:
-            usr_task_lock->release();
+            resource_lock->release();
             self->current->sys_ret = 0;            
             break;
 
@@ -56,7 +56,7 @@ int syscall(enum system_call req_id, T ... args)
 {
     std::vector<std::experimental::fundamentals_v1::any> params = {args ...};
 
-    syscall(req_id, &params);
+    return syscall(req_id, &params);
 }
 
 int sys_exit() {
@@ -75,13 +75,18 @@ void Kernel::create_task(void *(*start_routine)(void *), void *arg) {
     std::shared_ptr<Task> task = std::shared_ptr<Task>(new Task());
 
     // __spin_lock(&newlib_lock);
-    resource_lock->acquire();
+    // resource_lock->acquire();
     task->id = next_id++;
     task->stack_size = 4096;
     task->stack_base = malloc(task->stack_size);
 
     task->frame = new (task->stack_base + task->stack_size - sizeof(aarch64_frame_t)) Frame(start_routine, arg);
-    resource_lock->release();
+    // resource_lock->release();
+
+    Kernel::instance().resource_lock->acquire();
+    Kernel::instance().resource_lock->release();
+    Kernel::instance().resource_lock->acquire();
+    Kernel::instance().resource_lock->release();    
 
     ready(task);    
     // __spin_unlock(&newlib_lock);
@@ -101,23 +106,27 @@ void Kernel::delete_task(std::shared_ptr<Task> task) {
 
 std::shared_ptr<Task> Kernel::next() {
     // __spin_lock(&newlib_lock);
-    resource_lock->acquire();
+    // resource_lock->acquire();
+    Kernel::instance().resource_lock->acquire();
 
     auto task = tasks.front();
     tasks.erase(tasks.begin());
     
-    resource_lock->release();    
+    Kernel::instance().resource_lock->release();    
+    // resource_lock->release();    
     // __spin_unlock(&newlib_lock);
 
     return task;
 }
 
 void Kernel::ready(std::shared_ptr<Task> task) {
-    resource_lock->acquire();
+    // resource_lock->acquire();
+    Kernel::instance().resource_lock->acquire();    
     
     tasks.push_back(task);
 
-    resource_lock->release();
+    Kernel::instance().resource_lock->release();    
+    // resource_lock->release();
 }
 
 std::shared_ptr<Task> CPU::next() {

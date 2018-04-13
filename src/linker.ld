@@ -37,7 +37,7 @@ SECTIONS {
     __heap_end = .;
 
     .stack_core_0 : {
-        . = ALIGN(8);
+        . = ALIGN(16);
         __el0_stack_start_core_0 = .;
         . = . + 0x1000;    
         __el0_stack_end_core_0 = .;
@@ -48,7 +48,7 @@ SECTIONS {
     } > RAM
 
     .stack_core_1 : {
-        . = ALIGN(8);
+        . = ALIGN(16);
         __el0_stack_start_core_1 = .;
         . = . + 0x1000;    
         __el0_stack_end_core_1 = .;
@@ -59,7 +59,7 @@ SECTIONS {
     } > RAM
 
     .stack_core_2 : {
-        . = ALIGN(8);
+        . = ALIGN(16);
         __el0_stack_start_core_2 = .;
         . = . + 0x1000;    
         __el0_stack_end_core_2 = .;
@@ -70,7 +70,7 @@ SECTIONS {
     } > RAM
 
     .stack_core_3 : {
-        . = ALIGN(8);
+        . = ALIGN(16);
         __el0_stack_start_core_3 = .;
         . = . + 0x1000;    
         __el0_stack_end_core_3 = .;

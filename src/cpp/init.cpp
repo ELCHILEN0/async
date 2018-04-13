@@ -46,7 +46,7 @@ void master_core () {
 }
 
 void *test_function(void *arg) {
-    while (true);
+    // while (true);
 
     sys_acquire();
     printf("acquired, now releasing...\r\n");
@@ -81,7 +81,10 @@ void slave_core() {
 
     Kernel::instance().resource_lock->acquire();   
     printf("lock3 test\r\n");  
-    Kernel::instance().resource_lock->release();     
+    Kernel::instance().resource_lock->release();    
+    Kernel::instance().resource_lock->acquire();   
+    Kernel::instance().resource_lock->release();   
+ 
 
     Kernel::instance().create_task(test_function, NULL);
     Kernel::instance().get(core_id)->next()->switch_to();
@@ -110,7 +113,7 @@ void cinit_core(void) {
             // core_timer_init( CT_CTRL_SRC_CRY, CT_CTRL_INC1, 0x80000000);
 
             core_enable(1, (uint64_t) _init_core);
-            core_enable(2, (uint64_t) _init_core);
+            // core_enable(2, (uint64_t) _init_core);
             // core_enable(3, (uint64_t) _init_core); 
 
             // init_vector_tables();
